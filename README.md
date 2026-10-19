@@ -119,48 +119,46 @@ Australia-1859-Sim/
 
 ---
 
-## ⚡ Nowoczesny Port C++20 (Raylib + Autentyczny Interfejs Borland GUI)
+## ⚡ Modern C++20 Port (Raylib + Authentic Borland UI / English Interface)
 
-Projekt posiada w pełni funkcjonalny, nowoczesny port w folderze `modern/`, który zachowuje **100% oryginalnych algorytmów z 2005 roku** oraz **przywraca wierny, klasyczny interfejs graficzny Borland C++Builder 6 (VCL)**:
+The project includes a modern, high-performance port in `modern/` running at 60 FPS, maintaining **100% of the original 2005 Lotka-Volterra & cellular automata algorithms**, fully translated into **English** with an improved **2-Phase Workflow**:
 
-### 🖥️ Wiernie Przywrócony Interfejs Borland C++Builder 6:
-* **Etapowy Kreator Świata (Wizard Flow):**
-  * **Etap 0: Generator „Bóg ver. 1.3.12”** – z 4 zakładkami:
-    * `Kształt` – dobór amplitudy i generowanie wstępnego zarysu lądu,
-    * `Zatoki` – rzeźbienie linii brzegowej (zatoki głębokie oraz zatoki na plaży),
-    * `Korekta` – powiększanie (`+`), pomniejszanie (`-`) lądu oraz wygładzanie brzegów automatami komórkowymi,
-    * `Wnętrze` – proporcje plaży, trawy, śniegu oraz dodawanie ziarnistości terenu.
-  * **Etap 1: Generator „Króliczek ver. 1.3.1”** – konfiguracja liczebności, stad i rozproszenia populacji królików.
-  * **Etap 2: Generator „Lisek ver. 1.3.1”** – konfiguracja liczebności, stad i rozproszenia populacji lisów.
-  * **Etap 3: Informer „UB ver. 1.3.6”** – aktywna symulacja ekosystemu z 7 zakładkami:
-    * `Trawka` – kontrola wegetacji, zazielenianie na maksa, koszenie i reset trawy,
-    * `Króliki` – kontrola genetyki i metabolizmu (prędkość, metabolizm, kęs, żołądek, głód, starvation, detekcja lisów, długość życia, dojrzałość, ciąża),
-    * `Lisy` – parametry drapieżników (prędkość, metabolizm, wartość odżywcza królika, żołądek, głód, długość życia, ciąża),
-    * `Stat` – statystyki na żywo: liczebność, zgony z głodu, ze starości oraz króliki upolowane,
-    * `Mój królik` / `Mój lis` – szczegółowy inspektor wybranego osobnika (status, płeć, wiek/max, najedzenie, ciąża, wielkość),
-    * `Ewolucja` – średnie parametry populacji mierzone w czasie rzeczywistym.
-* **Klasyczne kontrolki VCL:**
-  * Zakładki (TPageControl),
-  * Ramki 3D (TGroupBox, TBevel, Sunken/Raised boxes),
-  * Pola numeryczne TUpDown ze strzałkami góra/dół (spinboxy),
-  * Pola tekstowe TEdit o żółtym tle z purpurowym/czarnym fontem,
-  * Przyciski nawigacyjne `<< Powrót` oraz `OK >>` (w etapie symulacji działający jako pauza/wznowienie).
-* **🖥️ Opcja Pełnego Ekranu (Fullscreen):**
-  * Przełączanie w dowolnym momencie dedykowanym przyciskiem **`[Pełny ekran (F11)]`** na dole panelu lub klawiszem **`F11`**,
-  * Wirtualna rozdzielczość ze skalowaniem letterbox zachowującym idealne proporcje bez rozciągania obrazu,
-  * Wygładzanie i precyzyjne mapowanie kursora myszy na wirtualne płótno w każdym trybie.
+### 🏝️ Streamlined 2-Phase Gameplay Flow:
+1. **Phase 1: Island Generator (`Island Generator ver. 1.4`):**
+   * Shape your procedural island before introducing life:
+     * **`Shape`** – Select sinusoidal wave amplitude (`130`) and click `Generate Island`.
+     * **`Bays`** – Adjust bay count, size, and irregularity; click `Carve Deep Bays` or `Carve Coastal Bays`.
+     * **`Adjust`** – Expand (`+`) or shrink (`-`) landmass, smooth coastline with cellular automata.
+     * **`Terrain`** – Configure beach, grass, snow altitudes, and inject noise grain.
+   * Click **`Start Simulation >>`** to finalize the island and bring the world to life!
 
-### 🎮 Uruchomienie portu (Gotowy plik `.exe`)
-Skompilowany, w pełni niezależny 64-bitowy plik wykonywalny znajduje się w:  
+2. **Phase 2: Ecosystem Simulation & Control (`Ecosystem Manager ver. 1.4`):**
+   * The entire living world is active with full live control:
+     * **`Grass`** – Adjust vegetation rate, lush grass (max), mow grass (min), or reset terrain.
+     * **`Rabbits`** – **Direct Spawner (`+ Spawn Rabbits Now`)** + Live Genetic / Metabolic controls (speed, metabolism, grass bite, stomach, hunger, starving threshold, fox detection, lifespan).
+     * **`Foxes`** – **Direct Spawner (`+ Spawn Foxes Now`)** + Live Predator traits (speed, metabolism, rabbit nutritive value, stomach, hunger, lifespan, maturity, gestation).
+     * **`Stats`** – Live counters of alive rabbits/foxes, deaths by starvation, age, or predation.
+     * **`My Rabbit`** – Real-time tracker for individual rabbits: status (mating, hungry, fleeing, starving), gender, age, stomach fullness, gestation, size + individual actions (`Feed Rabbit`, `Remove Selected`).
+     * **`My Fox`** – Real-time tracker for individual foxes: status (mating, hunting, prowling), gender, age, stomach fullness, gestation, size + individual actions (`Feed Fox`, `Remove Selected`).
+     * **`Evolution`** – Dynamic real-time population averages.
+   * **Clicking any animal on the 500x400 map** instantly locks onto it with the target marker (`wybrany.bmp`) and opens its card in `My Rabbit` or `My Fox`!
+   * Click **`<< Island`** at any time to return to island generation and re-sculpt the land.
+
+### 🖥️ Authentic Borland C++Builder Controls & Fullscreen:
+* **Retro Win95/Win2000 UI:** 3D sunken/raised borders, etched GroupBoxes, yellow TEdit fields, TUpDown numeric spinbox arrows (`^`/`v`), MultiLine tabs.
+* **🖥️ Fullscreen (F11):** Toggle between windowed and fullscreen with the button or **`F11`** hotkey. Uses letterboxed virtual resolution so graphics and mouse coordinates remain pixel-perfect on any screen resolution.
+
+### 🎮 How to Run (Prebuilt Executable):
+A standalone, fully statically linked 64-bit Windows executable is ready in:  
 👉 **`modern/bin/Australia1859Sim.exe`**  
-Wystarczy go uruchomić – działa natywnie na współczesnym Windowsie bez instalowania żadnych bibliotek!
+Just double-click to run on Windows 10 & 11 with zero dependencies!
 
-### ⌨️ Sterowanie i skróty klawiszowe w nowoczesnym porcie:
-* **`[F11]`** / **Przycisk na dole panelu** – Przełączenie trybu pełnoekranowego (Fullscreen / Windowed)
-* **`[SPACJA]`** – Przejście do następnego etapu w kreatorze lub Wstrzymanie / Wznowienie w symulacji
-* **`[1] / [2] / [3] / [4]`** – Szybka zmiana tempa symulacji (1x, 2x, 5x, 10x)
-* **`Kliknięcie myszką na mapie`** – Bezpośrednie zaznaczenie najbliższego królika lub lisa i przejście do jego karty w inspektorze (`Mój królik` / `Mój lis`).
-* **`Klikanie zakładek i strzałek UpDown`** – Płynna zmiana parametrów na żywo.
+### ⌨️ Controls & Hotkeys:
+* **`[F11]`** / **Panel Button** – Fullscreen toggle (Letterbox 4:3 / 16:9)
+* **`[SPACE]`** – Start simulation (Phase 1) / Pause or Resume (Phase 2)
+* **`[1] / [2] / [3] / [4]`** – Simulation speed multipliers (1x, 2x, 5x, 10x)
+* **`Mouse Click on Island Map`** – Select and lock onto the closest rabbit or fox (`My Rabbit` / `My Fox`)
+* **`Clicking Tabs and UpDown Spinners`** – Adjust parameters, spawn animals, and manage genetics in real time!
 
 ### 🛠️ Kompilacja portu ze źródeł (Visual Studio 2026 / CMake):
 ```bash

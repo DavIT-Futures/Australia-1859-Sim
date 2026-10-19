@@ -25,15 +25,13 @@ public:
 
     int plus = 0;
 
-    // Faza wizard / etap:
-    // 0 = Generator "Bóg ver. 1.3.12"
-    // 1 = Generator "Króliczek ver. 1.3.1"
-    // 2 = Generator "Lisek ver. 1.3.1"
-    // 3 = Informer "UB ver. 1.3.6" (Symulacja aktywna)
+    // Phase:
+    // 0 = Island Generator ("Creator ver. 1.4")
+    // 1 = Ecosystem Simulation & Management ("Informer ver. 1.4")
     int poziom = 0;
 
-    int activeGodTab = 0;       // 0: Kształt, 1: Zatoki, 2: Korekta, 3: Wnętrze
-    int activeInformerTab = 0;  // 0: Trawka, 1: Króliki, 2: Lisy, 3: Statystyki, 4: Mój królik, 5: Mój lis, 6: Ewolucja
+    int activeGodTab = 0;       // 0: Shape, 1: Bays, 2: Adjust, 3: Terrain
+    int activeInformerTab = 0;  // 0: Grass, 1: Rabbits, 2: Foxes, 3: Stats, 4: My Rabbit, 5: My Fox, 6: Evolution
 
     // Parametry terenu (Bóg):
     int amplitude = 130;

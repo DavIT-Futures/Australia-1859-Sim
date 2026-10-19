@@ -89,14 +89,16 @@ void Simulation::applyLisParams() {
 void Simulation::butOkClick() {
     if (poziom == 0) {
         zatwierdzWyspe();
-        krol->generuj(upDownIleK, upDownStadaK, upDownRozpK);
+        if (Ktab.empty()) {
+            krol->generuj(upDownIleK, upDownStadaK, upDownRozpK);
+        }
+        if (Ltab.empty()) {
+            lis->generuj(upDownIleL, upDownStadaL, upDownRozpL);
+        }
         poziom = 1;
-    } else if (poziom == 1) {
-        lis->generuj(upDownIleL, upDownStadaL, upDownRozpL);
-        poziom = 2;
-    } else if (poziom == 2) {
-        poziom = 3;
         running = true;
+    } else {
+        running = !running;
     }
 }
 
@@ -109,13 +111,10 @@ void Simulation::butPowrotClick() {
             }
         }
         krol->czysc();
+        lis->czysc();
         fale();
         poziom = 0;
-    } else if (poziom == 2) {
-        lis->czysc();
-        poziom = 1;
-    } else if (poziom == 3) {
-        poziom = 2;
+        running = false;
     }
 }
 
@@ -578,9 +577,6 @@ void Simulation::update() {
 
             // Ruch królików
             krol->rusz();
-        }
-
-        if (poziom >= 2) {
             // Ruch lisów
             lis->rusz();
         }

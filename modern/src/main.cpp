@@ -8,11 +8,11 @@
 
 using namespace ClassicUI;
 
-// Wymiary wirtualnego płótna odpowiadające oryginalnemu oknu Borland C++Builder 6
+// Virtual canvas dimensions matching the authentic Borland C++Builder 6 window
 static const int VIRTUAL_W = 752;
 static const int VIRTUAL_H = 418;
 
-// Pomocnik do bezpiecznego ładowania tekstur BMP z przezroczystością koloru Magenta (clFuchsia 0xFF00FF)
+// Helper to load BMP sprites with Magenta colorkey (clFuchsia 0xFF00FF) transparency
 static Texture2D LoadTransparentBMP(const char* path1, const char* path2) {
     Image img = { 0 };
     if (FileExists(path1)) {
@@ -22,7 +22,6 @@ static Texture2D LoadTransparentBMP(const char* path1, const char* path2) {
     }
 
     if (img.data != nullptr) {
-        // Zastąp kolor fioletowy/różowy (255, 0, 255) pełną przezroczystością
         ImageColorReplace(&img, Color{ 255, 0, 255, 255 }, BLANK);
         Texture2D tex = LoadTextureFromImage(img);
         UnloadImage(img);
@@ -32,22 +31,22 @@ static Texture2D LoadTransparentBMP(const char* path1, const char* path2) {
 }
 
 int main() {
-    // Okno startowe w trybie okienkowym (1.6x skali dla ostrości na monitorach FHD/4K)
+    // Initial window size (1.6x logical resolution for crisp display on high-DPI monitors)
     const int startWindowW = 1200;
     const int startWindowH = 668;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
-    InitWindow(startWindowW, startWindowH, "Wyspa \"Spy VsSpy 1.3.\" - Autor: Dawid Domagala (Australia 1859 Sim)");
+    InitWindow(startWindowW, startWindowH, "Australia 1859 Sim - Island Ecosystem Simulator (Dawid Domagala)");
     SetWindowMinSize(752, 418);
     SetTargetFPS(60);
 
-    // RenderTexture dla stałej rozdzielczości logicznej i idealnego skalowania Fullscreen
+    // RenderTexture for fixed virtual resolution and pixel-perfect letterbox scaling
     RenderTexture2D target = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
     SetTextureFilter(target.texture, TEXTURE_FILTER_POINT);
 
     Simulation sim;
 
-    // Bufor RGBA dla mapy terenu 500x400
+    // RGBA buffer for procedural 500x400 island map
     std::vector<uint8_t> rgbaBuffer(Simulation::SZER * Simulation::WYS * 4, 255);
     Image islandImage = {
         rgbaBuffer.data(),
@@ -58,38 +57,38 @@ int main() {
     };
     Texture2D islandTexture = LoadTextureFromImage(islandImage);
 
-    // Załaduj sprite'y zwierząt z oryginalnymi maskami
+    // Load authentic animal sprites
     Texture2D texKrolik  = LoadTransparentBMP("assets/krolik.bmp", "krolik.bmp");
     Texture2D texLis     = LoadTransparentBMP("assets/lis.bmp", "lis.bmp");
     Texture2D texWybrany = LoadTransparentBMP("assets/wybrany.bmp", "wybrany.bmp");
 
     while (!WindowShouldClose()) {
-        // --- Obsługa pełnego ekranu (F11) ---
+        // --- Fullscreen toggle (F11) ---
         if (IsKeyPressed(KEY_F11)) {
             ToggleFullscreen();
         }
 
-        // Klawisze skrótów
+        // Global hotkeys
         if (IsKeyPressed(KEY_SPACE)) {
-            if (sim.poziom == 3) {
+            if (sim.poziom == 1) {
                 sim.running = !sim.running;
             } else {
                 sim.butOkClick();
             }
         }
-        if (IsKeyPressed(KEY_ONE)) sim.simSpeed = 1;
-        if (IsKeyPressed(KEY_TWO)) sim.simSpeed = 2;
+        if (IsKeyPressed(KEY_ONE))   sim.simSpeed = 1;
+        if (IsKeyPressed(KEY_TWO))   sim.simSpeed = 2;
         if (IsKeyPressed(KEY_THREE)) sim.simSpeed = 5;
-        if (IsKeyPressed(KEY_FOUR)) sim.simSpeed = 10;
+        if (IsKeyPressed(KEY_FOUR))  sim.simSpeed = 10;
 
-        // Aktualizacja symulacji
+        // Step simulation logic
         sim.update();
 
-        // Odświeżenie tekstury wyspy
+        // Refresh island terrain texture
         sim.renderToRGBA(rgbaBuffer.data());
         UpdateTexture(islandTexture, rgbaBuffer.data());
 
-        // Obliczanie proporcji i wirtualnych współrzędnych myszy (Letterbox scaling)
+        // Compute letterbox aspect ratio and virtual mouse coordinates
         float screenW = (float)GetScreenWidth();
         float screenH = (float)GetScreenHeight();
         float scale = fminf(screenW / (float)VIRTUAL_W, screenH / (float)VIRTUAL_H);
@@ -103,14 +102,13 @@ int main() {
         };
         ClassicUI::SetVirtualMouse(vMouse);
 
-        // Wybór królika / lisa kliknięciem na mapie (współrzędne mapy: x: 8..508, y: 8..408)
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        // Select rabbit / fox by clicking on the 500x400 map
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && sim.poziom == 1) {
             int mx = (int)vMouse.x - 8;
             int my = (int)vMouse.y - 8;
             if (mx >= 0 && mx < Simulation::SZER && my >= 0 && my < Simulation::WYS) {
-                // Szukaj najbliższego królika
                 int bestK = -1;
-                float bestDistK = 15.0f;
+                float bestDistK = 18.0f;
                 for (size_t i = 0; i < sim.Ktab.size(); i++) {
                     float d = hypotf((float)(sim.Ktab[i].x - mx), (float)(sim.Ktab[i].y - my));
                     if (d < bestDistK) {
@@ -118,9 +116,9 @@ int main() {
                         bestK = (int)i;
                     }
                 }
-                // Szukaj najbliższego lisa
+
                 int bestL = -1;
-                float bestDistL = 15.0f;
+                float bestDistL = 18.0f;
                 for (size_t i = 0; i < sim.Ltab.size(); i++) {
                     float d = hypotf((float)(sim.Ltab[i].x - mx), (float)(sim.Ltab[i].y - my));
                     if (d < bestDistL) {
@@ -131,26 +129,26 @@ int main() {
 
                 if (bestL >= 0 && bestDistL <= bestDistK) {
                     sim.selectedLisIdx = bestL;
-                    sim.activeInformerTab = 5; // Tab "Mój lis"
+                    sim.activeInformerTab = 5; // "My Fox" tab
                 } else if (bestK >= 0) {
                     sim.selectedKrolikIdx = bestK;
-                    sim.activeInformerTab = 4; // Tab "Mój królik"
+                    sim.activeInformerTab = 4; // "My Rabbit" tab
                 }
             }
         }
 
         // =========================================================================
-        // RYSOWANIE DO WIRTUALNEGO RENDER TARGETU (VIRTUAL_W x VIRTUAL_H)
+        // DRAW TO VIRTUAL RENDER TARGET (VIRTUAL_W x VIRTUAL_H)
         // =========================================================================
         BeginTextureMode(target);
         ClearBackground(CLR_BG);
 
-        // 1. Mapa 500x400 po lewej stronie w ramce 3D sunken
+        // 1. 500x400 Island map on left in a 3D sunken border
         Rectangle mapBorder = { 6, 6, 504, 404 };
         DrawSunkenBox(mapBorder, BLACK);
         DrawTexture(islandTexture, 8, 8, WHITE);
 
-        // Rysowanie królików na mapie
+        // Draw rabbits
         for (const auto& k : sim.Ktab) {
             if (texKrolik.id != 0) {
                 DrawTexture(texKrolik, k.x - 2 + 8, k.y - 2 + 8, WHITE);
@@ -159,7 +157,7 @@ int main() {
             }
         }
 
-        // Rysowanie lisów na mapie
+        // Draw foxes
         for (const auto& l : sim.Ltab) {
             if (texLis.id != 0) {
                 DrawTexture(texLis, l.x - 2 + 8, l.y - 2 + 8, WHITE);
@@ -168,8 +166,8 @@ int main() {
             }
         }
 
-        // Wskaźnik wybranego osobnika (wybrany.bmp)
-        if (sim.poziom == 3) {
+        // Highlight selected animal
+        if (sim.poziom == 1) {
             if (sim.activeInformerTab == 4 && sim.selectedKrolikIdx >= 0 && sim.selectedKrolikIdx < (int)sim.Ktab.size()) {
                 const auto& selK = sim.Ktab[sim.selectedKrolikIdx];
                 if (texWybrany.id != 0) {
@@ -187,7 +185,7 @@ int main() {
             }
         }
 
-        // 2. Prawy panel sterowania (GroupBox zależny od sim.poziom)
+        // 2. Control Panel on right
         const float panelX = 516.0f;
         const float panelY = 8.0f;
         const float panelW = 228.0f;
@@ -195,130 +193,86 @@ int main() {
         Rectangle groupBoxRect = { panelX, panelY, panelW, panelH };
 
         // -------------------------------------------------------------------------
-        // POZIOM 0: Generator "Bóg ver. 1.3.12"
+        // PHASE 1: Island Generator
         // -------------------------------------------------------------------------
         if (sim.poziom == 0) {
-            DrawGroupBox(groupBoxRect, "Generator \"Bóg ver. 1.3.12\"");
+            DrawGroupBox(groupBoxRect, "Island Generator ver. 1.4");
 
-            const char* godTabs[] = { "Kształt", "Zatoki", "Korekta", "Wnętrze" };
+            const char* godTabs[] = { "Shape", "Bays", "Adjust", "Terrain" };
             Rectangle tabRect = { panelX + 6.0f, panelY + 18.0f, panelW - 12.0f, 20.0f };
             sim.activeGodTab = DrawTabs(tabRect, godTabs, 4, sim.activeGodTab);
 
             float rowW = panelW - 24.0f;
             float startX = panelX + 12.0f;
 
-            if (sim.activeGodTab == 0) { // Kształt
-                DrawLabel(startX + 10.0f, panelY + 54.0f, "Kształt:", 12, CLR_NAVY);
-                Rectangle rectUp = { startX + 90.0f, panelY + 52.0f, 60.0f, 20.0f };
+            if (sim.activeGodTab == 0) { // Shape
+                DrawLabel(startX + 6.0f, panelY + 54.0f, "Shape Amplitude:", 10, CLR_NAVY);
+                Rectangle rectUp = { startX + 110.0f, panelY + 50.0f, 60.0f, 20.0f };
                 DrawUpDown(rectUp, sim.amplitude, 1, 1000, 5);
 
-                if (DrawButton({ startX + 16.0f, panelY + 90.0f, rowW - 32.0f, 44.0f }, "Generuj")) {
+                if (DrawButton({ startX + 16.0f, panelY + 90.0f, rowW - 32.0f, 44.0f }, "Generate Island")) {
                     sim.generujWyspe(sim.amplitude);
                 }
 
-                DrawLabel(startX + 4.0f, panelY + 155.0f, "Ustaw kształt wyspy i kliknij\n'Generuj', aby stworzyć nowy\nzarys lądu.", 10, CLR_TEXT);
+                DrawLabel(startX + 4.0f, panelY + 155.0f, "Set shape amplitude and click\n'Generate Island' to forge\na new island boundary.\n\nThen use Bays & Adjust to sculpt.", 10, CLR_TEXT);
             }
-            else if (sim.activeGodTab == 1) { // Zatoki
-                DrawUpDownRow(startX, panelY + 48.0f, rowW, "Liczba zatok", sim.upDownLzatok, 1, 99);
-                DrawUpDownRow(startX, panelY + 74.0f, rowW, "Rozmiar", sim.upDownWZatok, 1, 1000, 5);
-                DrawUpDownRow(startX, panelY + 100.0f, rowW, "Nieregularność", sim.upDownRZatok, 0, 999, 5);
+            else if (sim.activeGodTab == 1) { // Bays
+                DrawUpDownRow(startX, panelY + 48.0f, rowW, "Bay Count", sim.upDownLzatok, 1, 99);
+                DrawUpDownRow(startX, panelY + 74.0f, rowW, "Bay Size", sim.upDownWZatok, 1, 1000, 5);
+                DrawUpDownRow(startX, panelY + 100.0f, rowW, "Irregularity", sim.upDownRZatok, 0, 999, 5);
 
-                if (DrawButton({ startX + 10.0f, panelY + 134.0f, rowW - 20.0f, 32.0f }, "Dodaj zatoki")) {
+                if (DrawButton({ startX + 10.0f, panelY + 134.0f, rowW - 20.0f, 32.0f }, "Carve Deep Bays")) {
                     sim.dodajZatoki(sim.upDownLzatok, sim.upDownWZatok, sim.upDownRZatok);
                 }
-                if (DrawButton({ startX + 10.0f, panelY + 176.0f, rowW - 20.0f, 32.0f }, "Dodaj zatoki na plaży")) {
+                if (DrawButton({ startX + 10.0f, panelY + 176.0f, rowW - 20.0f, 32.0f }, "Carve Coastal Bays")) {
                     sim.dodajZatokiPlaza(sim.upDownLzatok, sim.upDownWZatok, sim.upDownRZatok);
                 }
             }
-            else if (sim.activeGodTab == 2) { // Korekta
-                DrawLabel(startX + 14.0f, panelY + 48.0f, "Powiększ", 10, CLR_NAVY);
+            else if (sim.activeGodTab == 2) { // Adjust
+                DrawLabel(startX + 14.0f, panelY + 48.0f, "Expand (+)", 10, CLR_NAVY);
                 if (DrawButton({ startX + 10.0f, panelY + 64.0f, 64.0f, 44.0f }, "+")) {
                     sim.zwiekszLad();
                 }
 
-                DrawLabel(startX + 114.0f, panelY + 48.0f, "Pomniejsz", 10, CLR_NAVY);
+                DrawLabel(startX + 114.0f, panelY + 48.0f, "Shrink (-)", 10, CLR_NAVY);
                 if (DrawButton({ startX + 110.0f, panelY + 64.0f, 64.0f, 44.0f }, "-")) {
                     sim.zmniejszLad();
                 }
 
-                DrawUpDownRow(startX, panelY + 126.0f, rowW, "Wygładzanie", sim.upDownGladz, 1, 20);
-                if (DrawButton({ startX + 10.0f, panelY + 160.0f, rowW - 20.0f, 32.0f }, "Wygładź brzeg")) {
+                DrawUpDownRow(startX, panelY + 126.0f, rowW, "Smoothing Pass", sim.upDownGladz, 1, 20);
+                if (DrawButton({ startX + 10.0f, panelY + 160.0f, rowW - 20.0f, 32.0f }, "Smooth Coastline")) {
                     sim.wygladz(sim.upDownGladz);
                 }
             }
-            else if (sim.activeGodTab == 3) { // Wnętrze
-                if (DrawUpDownRow(startX, panelY + 48.0f, rowW, "Plaża", sim.upDownPlaza, 0, 200, 5) ||
-                    DrawUpDownRow(startX, panelY + 72.0f, rowW, "Trawa", sim.upDownTrawa, 0, 200, 5) ||
-                    DrawUpDownRow(startX, panelY + 96.0f, rowW, "Śnieg", sim.upDownSnieg, 0, 200, 5)) {
+            else if (sim.activeGodTab == 3) { // Terrain
+                if (DrawUpDownRow(startX, panelY + 48.0f, rowW, "Beach Width", sim.upDownPlaza, 0, 200, 5) ||
+                    DrawUpDownRow(startX, panelY + 72.0f, rowW, "Grass Zone", sim.upDownTrawa, 0, 200, 5) ||
+                    DrawUpDownRow(startX, panelY + 96.0f, rowW, "Snow Zone", sim.upDownSnieg, 0, 200, 5)) {
                     sim.pallad();
                 }
 
-                DrawUpDownRow(startX, panelY + 124.0f, rowW, "Ziarnistość", sim.upDownZiarno, 0, 16);
+                DrawUpDownRow(startX, panelY + 124.0f, rowW, "Noise Grain", sim.upDownZiarno, 0, 16);
 
-                if (DrawButton({ startX + 10.0f, panelY + 154.0f, rowW - 20.0f, 28.0f }, "Dodaj ziarno")) {
+                if (DrawButton({ startX + 10.0f, panelY + 154.0f, rowW - 20.0f, 28.0f }, "Add Terrain Noise")) {
                     sim.dodajZiarno(sim.upDownZiarno);
                 }
-                if (DrawButton({ startX + 10.0f, panelY + 190.0f, rowW - 20.0f, 28.0f }, "Akceptuj paletę")) {
+                if (DrawButton({ startX + 10.0f, panelY + 190.0f, rowW - 20.0f, 28.0f }, "Apply Palette")) {
                     sim.pallad();
                 }
             }
         }
 
         // -------------------------------------------------------------------------
-        // POZIOM 1: Generator "Króliczek ver. 1.3.1"
+        // PHASE 2: Ecosystem Simulation & Object Management
         // -------------------------------------------------------------------------
         else if (sim.poziom == 1) {
-            DrawGroupBox(groupBoxRect, "Generator \"Króliczek ver. 1.3.1\"");
+            DrawGroupBox(groupBoxRect, "Ecosystem Manager ver. 1.4");
             float rowW = panelW - 24.0f;
             float startX = panelX + 12.0f;
 
-            DrawUpDownRow(startX, panelY + 40.0f, rowW, "Króliki", sim.upDownIleK, 1, 999, 10);
-            DrawUpDownRow(startX, panelY + 70.0f, rowW, "Stada", sim.upDownStadaK, 1, 16);
-            DrawUpDownRow(startX, panelY + 100.0f, rowW, "Rozproszenie", sim.upDownRozpK, 1, 16);
-
-            if (DrawButton({ startX + 16.0f, panelY + 140.0f, rowW - 32.0f, 44.0f }, "Generuj króliki")) {
-                sim.generujKroliki(sim.upDownIleK);
-            }
-
-            char kCountBuf[64];
-            snprintf(kCountBuf, sizeof(kCountBuf), "Populacja królików: %zu", sim.Ktab.size());
-            DrawLabel(startX + 8.0f, panelY + 200.0f, kCountBuf, 10, CLR_TEXT);
-            DrawLabel(startX + 8.0f, panelY + 224.0f, "Kliknij 'OK >>' na dole,\naby przejść do lisów.", 10, CLR_NAVY);
-        }
-
-        // -------------------------------------------------------------------------
-        // POZIOM 2: Generator "Lisek ver. 1.3.1"
-        // -------------------------------------------------------------------------
-        else if (sim.poziom == 2) {
-            DrawGroupBox(groupBoxRect, "Generator \"Lisek ver. 1.3.1\"");
-            float rowW = panelW - 24.0f;
-            float startX = panelX + 12.0f;
-
-            DrawUpDownRow(startX, panelY + 40.0f, rowW, "Lisy", sim.upDownIleL, 1, 999, 5);
-            DrawUpDownRow(startX, panelY + 70.0f, rowW, "Stada", sim.upDownStadaL, 1, 16);
-            DrawUpDownRow(startX, panelY + 100.0f, rowW, "Rozproszenie", sim.upDownRozpL, 1, 16);
-
-            if (DrawButton({ startX + 16.0f, panelY + 140.0f, rowW - 32.0f, 44.0f }, "Generuj lisy")) {
-                sim.generujLisy(sim.upDownIleL);
-            }
-
-            char lCountBuf[64];
-            snprintf(lCountBuf, sizeof(lCountBuf), "Populacja lisów: %zu", sim.Ltab.size());
-            DrawLabel(startX + 8.0f, panelY + 200.0f, lCountBuf, 10, CLR_TEXT);
-            DrawLabel(startX + 8.0f, panelY + 224.0f, "Kliknij 'OK >>' na dole,\naby uruchomić ekosystem!", 10, CLR_NAVY);
-        }
-
-        // -------------------------------------------------------------------------
-        // POZIOM 3: Informer "UB ver. 1.3.6"
-        // -------------------------------------------------------------------------
-        else if (sim.poziom == 3) {
-            DrawGroupBox(groupBoxRect, "Informer \"UB ver. 1.3.6\"");
-            float rowW = panelW - 24.0f;
-            float startX = panelX + 12.0f;
-
-            // Dwie linie zakładek Borland TPageControl MultiLine
-            const char* tabsRow1[] = { "Trawka", "Króliki", "Lisy", "Stat" };
-            const char* tabsRow2[] = { "Mój królik", "Mój lis", "Ewolucja" };
+            // Two-row MultiLine TabControl
+            const char* tabsRow1[] = { "Grass", "Rabbits", "Foxes", "Stats" };
+            const char* tabsRow2[] = { "My Rabbit", "My Fox", "Evolution" };
 
             Rectangle tabR1 = { panelX + 6.0f, panelY + 16.0f, panelW - 12.0f, 18.0f };
             Rectangle tabR2 = { panelX + 6.0f, panelY + 34.0f, panelW - 12.0f, 18.0f };
@@ -333,47 +287,69 @@ int main() {
 
             float baseY = panelY + 56.0f;
 
-            if (sim.activeInformerTab == 0) { // Trawka
-                DrawUpDownRow(startX, baseY + 6.0f, rowW, "Wegetacja", sim.wegetacja, 1, 100);
+            if (sim.activeInformerTab == 0) { // Grass
+                DrawUpDownRow(startX, baseY + 6.0f, rowW, "Vegetation Rate", sim.wegetacja, 1, 100);
 
-                if (DrawButton({ startX + 10.0f, baseY + 42.0f, rowW - 20.0f, 34.0f }, "Zazieleń (max)")) {
+                if (DrawButton({ startX + 10.0f, baseY + 40.0f, rowW - 20.0f, 32.0f }, "Lush Grass (Max)")) {
                     sim.maxTrawa();
                 }
-                if (DrawButton({ startX + 10.0f, baseY + 88.0f, rowW - 20.0f, 34.0f }, "Reset trawy")) {
+                if (DrawButton({ startX + 10.0f, baseY + 82.0f, rowW - 20.0f, 32.0f }, "Reset Grass Level")) {
                     sim.resetTrawy();
                 }
-                if (DrawButton({ startX + 10.0f, baseY + 134.0f, rowW - 20.0f, 34.0f }, "Skoś trawę (min)")) {
+                if (DrawButton({ startX + 10.0f, baseY + 124.0f, rowW - 20.0f, 32.0f }, "Mow Grass (Min)")) {
                     sim.minTrawa();
                 }
+
+                DrawLabel(startX + 8.0f, baseY + 172.0f, "Lower vegetation rate = faster\ngrass growth across the island.", 10, CLR_TEXT);
             }
-            else if (sim.activeInformerTab == 1) { // Króliki
+            else if (sim.activeInformerTab == 1) { // Rabbits
+                // Spawner section directly accessible
+                DrawUpDownRow(startX, baseY + 0.0f, rowW, "Spawn Count", sim.upDownIleK, 1, 999, 10);
+                if (DrawButton({ startX + 8.0f, baseY + 23.0f, rowW - 16.0f, 22.0f }, "+ Spawn Rabbits Now")) {
+                    sim.generujKroliki(sim.upDownIleK);
+                }
+
+                // Genetic / metabolic parameters
                 bool ch = false;
-                ch |= DrawUpDownRow(startX, baseY +   0.0f, rowW, "v królika", sim.vkVal, 1, 50, 1, "0.1x");
-                ch |= DrawUpDownRow(startX, baseY +  22.0f, rowW, "metabolizm", sim.metaKVal, 1, 50);
-                ch |= DrawUpDownRow(startX, baseY +  44.0f, rowW, "kęs", sim.kesKVal, 1, 255);
-                ch |= DrawUpDownRow(startX, baseY +  66.0f, rowW, "żołądek", sim.zoladekKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY +  88.0f, rowW, "głód", sim.glodKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + 110.0f, rowW, "GŁÓD!", sim.starvingKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + 132.0f, rowW, "detekcja", sim.detekcjaKVal, 1, 200, 5);
-                ch |= DrawUpDownRow(startX, baseY + 154.0f, rowW, "dł. życia", sim.zycieKVal, 1, 1000, 10);
-                ch |= DrawUpDownRow(startX, baseY + 176.0f, rowW, "dojrzałość", sim.dojrzaloscKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + 198.0f, rowW, "ciąża", sim.ciazaKVal, 1, 1000, 5);
+                ch |= DrawUpDownRow(startX, baseY +  50.0f, rowW, "Speed (0.1x)", sim.vkVal, 1, 50, 1, "0.1x");
+                ch |= DrawUpDownRow(startX, baseY +  71.0f, rowW, "Metabolism", sim.metaKVal, 1, 50);
+                ch |= DrawUpDownRow(startX, baseY +  92.0f, rowW, "Grass Bite", sim.kesKVal, 1, 255);
+                ch |= DrawUpDownRow(startX, baseY + 113.0f, rowW, "Stomach Size", sim.zoladekKVal, 1, 1000, 5);
+                ch |= DrawUpDownRow(startX, baseY + 134.0f, rowW, "Hunger Limit", sim.glodKVal, 1, 1000, 5);
+                ch |= DrawUpDownRow(startX, baseY + 155.0f, rowW, "Starving!", sim.starvingKVal, 1, 1000, 5);
+                ch |= DrawUpDownRow(startX, baseY + 176.0f, rowW, "Fox Detection", sim.detekcjaKVal, 1, 200, 5);
+                ch |= DrawUpDownRow(startX, baseY + 197.0f, rowW, "Lifespan", sim.zycieKVal, 1, 1000, 10);
                 if (ch) sim.applyKrolikParams();
+
+                if (DrawButton({ startX + 8.0f, baseY + 220.0f, rowW - 16.0f, 18.0f }, "Clear All Rabbits")) {
+                    sim.krol->czysc();
+                }
             }
-            else if (sim.activeInformerTab == 2) { // Lisy
+            else if (sim.activeInformerTab == 2) { // Foxes
+                // Spawner section directly accessible
+                DrawUpDownRow(startX, baseY + 0.0f, rowW, "Spawn Count", sim.upDownIleL, 1, 999, 5);
+                if (DrawButton({ startX + 8.0f, baseY + 23.0f, rowW - 16.0f, 22.0f }, "+ Spawn Foxes Now")) {
+                    sim.generujLisy(sim.upDownIleL);
+                }
+
+                // Genetic / metabolic parameters
                 bool ch = false;
-                ch |= DrawUpDownRow(startX, baseY +   0.0f, rowW, "v lisa", sim.vlVal, 1, 50, 1, "0.1x");
-                ch |= DrawUpDownRow(startX, baseY +  24.0f, rowW, "metabolizm", sim.metaLVal, 1, 50);
-                ch |= DrawUpDownRow(startX, baseY +  48.0f, rowW, "w.odż.", sim.wodzLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY +  72.0f, rowW, "żołądek", sim.zoladekLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY +  96.0f, rowW, "głód", sim.glodLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY + 120.0f, rowW, "dł. życia", sim.zycieLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY + 144.0f, rowW, "dojrzałość", sim.dojrzaloscLVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + 168.0f, rowW, "ciąża", sim.ciazaLVal, 1, 1000, 5);
+                ch |= DrawUpDownRow(startX, baseY +  50.0f, rowW, "Speed (0.1x)", sim.vlVal, 1, 50, 1, "0.1x");
+                ch |= DrawUpDownRow(startX, baseY +  71.0f, rowW, "Metabolism", sim.metaLVal, 1, 50);
+                ch |= DrawUpDownRow(startX, baseY +  92.0f, rowW, "Nutritive Val", sim.wodzLVal, 1, 5000, 50);
+                ch |= DrawUpDownRow(startX, baseY + 113.0f, rowW, "Stomach Size", sim.zoladekLVal, 1, 5000, 50);
+                ch |= DrawUpDownRow(startX, baseY + 134.0f, rowW, "Hunger Limit", sim.glodLVal, 1, 5000, 50);
+                ch |= DrawUpDownRow(startX, baseY + 155.0f, rowW, "Lifespan", sim.zycieLVal, 1, 5000, 50);
+                ch |= DrawUpDownRow(startX, baseY + 176.0f, rowW, "Maturity Age", sim.dojrzaloscLVal, 1, 1000, 5);
+                ch |= DrawUpDownRow(startX, baseY + 197.0f, rowW, "Gestation", sim.ciazaLVal, 1, 1000, 5);
                 if (ch) sim.applyLisParams();
+
+                if (DrawButton({ startX + 8.0f, baseY + 220.0f, rowW - 16.0f, 18.0f }, "Clear All Foxes")) {
+                    sim.lis->czysc();
+                }
             }
-            else if (sim.activeInformerTab == 3) { // Statystyki
-                char bKr[32], bLi[32], bZ1K[32], bZ2K[32], bZ3K[32], bZ1L[32], bZ2L[32];
+            else if (sim.activeInformerTab == 3) { // Stats
+                char bKr[32], bLi[32], bZ1K[32], bZ2K[32], bZ3K[32], bZ1L[32], bZ2L[32], bTick[32];
                 snprintf(bKr, sizeof(bKr), "%zu", sim.Ktab.size());
                 snprintf(bLi, sizeof(bLi), "%zu", sim.Ltab.size());
                 snprintf(bZ1K, sizeof(bZ1K), "%d", sim.krol ? sim.krol->z1 : 0);
@@ -381,27 +357,29 @@ int main() {
                 snprintf(bZ3K, sizeof(bZ3K), "%d", sim.lis ? sim.lis->z3 : 0);
                 snprintf(bZ1L, sizeof(bZ1L), "%d", sim.lis ? sim.lis->z1 : 0);
                 snprintf(bZ2L, sizeof(bZ2L), "%d", sim.lis ? sim.lis->z2 : 0);
+                snprintf(bTick, sizeof(bTick), "%d", sim.plus);
 
-                DrawReadOnlyEditRow(startX, baseY +   0.0f, rowW, "Króliki żywe", bKr);
-                DrawReadOnlyEditRow(startX, baseY +  24.0f, rowW, "Lisy żywe", bLi);
-                DrawReadOnlyEditRow(startX, baseY +  48.0f, rowW, "Zgon K (głód)", bZ1K);
-                DrawReadOnlyEditRow(startX, baseY +  72.0f, rowW, "Zgon K (wiek)", bZ2K);
-                DrawReadOnlyEditRow(startX, baseY +  96.0f, rowW, "K pożarte", bZ3K);
-                DrawReadOnlyEditRow(startX, baseY + 120.0f, rowW, "Zgon L (głód)", bZ1L);
-                DrawReadOnlyEditRow(startX, baseY + 144.0f, rowW, "Zgon L (wiek)", bZ2L);
+                DrawReadOnlyEditRow(startX, baseY +   0.0f, rowW, "Alive Rabbits", bKr);
+                DrawReadOnlyEditRow(startX, baseY +  24.0f, rowW, "Alive Foxes", bLi);
+                DrawReadOnlyEditRow(startX, baseY +  48.0f, rowW, "Rabbit Starved", bZ1K);
+                DrawReadOnlyEditRow(startX, baseY +  72.0f, rowW, "Rabbit Old Age", bZ2K);
+                DrawReadOnlyEditRow(startX, baseY +  96.0f, rowW, "Rabbit Hunted", bZ3K);
+                DrawReadOnlyEditRow(startX, baseY + 120.0f, rowW, "Fox Starved", bZ1L);
+                DrawReadOnlyEditRow(startX, baseY + 144.0f, rowW, "Fox Old Age", bZ2L);
+                DrawReadOnlyEditRow(startX, baseY + 168.0f, rowW, "Simulation Tick", bTick);
             }
-            else if (sim.activeInformerTab == 4) { // Mój królik
+            else if (sim.activeInformerTab == 4) { // My Rabbit (Individual Tracking & Control)
                 int maxK = (sim.Ktab.size() > 0) ? ((int)sim.Ktab.size() - 1) : 0;
-                DrawUpDownRow(startX, baseY + 0.0f, rowW, "Numer królika", sim.selectedKrolikIdx, 0, maxK);
+                DrawUpDownRow(startX, baseY + 0.0f, rowW, "Rabbit #", sim.selectedKrolikIdx, 0, maxK);
 
                 if (sim.selectedKrolikIdx >= 0 && sim.selectedKrolikIdx < (int)sim.Ktab.size()) {
-                    const auto& k = sim.Ktab[sim.selectedKrolikIdx];
-                    const char* stStr = "nieznany";
+                    auto& k = sim.Ktab[sim.selectedKrolikIdx];
+                    const char* stStr = "unknown";
                     switch (k.status) {
-                        case 3: stStr = "szuka pary"; break;
-                        case 2: stStr = "głód"; break;
-                        case 1: stStr = "ucieka!"; break;
-                        case 0: stStr = "GŁÓD!"; break;
+                        case 3: stStr = "Mating search"; break;
+                        case 2: stStr = "Hungry"; break;
+                        case 1: stStr = "Fleeing fox!"; break;
+                        case 0: stStr = "STARVING!"; break;
                     }
                     char bWiek[32], bZol[32], bCiaz[32], bWielk[32];
                     snprintf(bWiek, sizeof(bWiek), "%d / %d", k.wiek, sim.zycieKVal);
@@ -410,27 +388,41 @@ int main() {
                     else snprintf(bCiaz, sizeof(bCiaz), "---");
                     snprintf(bWielk, sizeof(bWielk), "%.2f", k.wielkosc);
 
-                    DrawReadOnlyEditRow(startX, baseY +  26.0f, rowW, "status", stStr);
-                    DrawReadOnlyEditRow(startX, baseY +  50.0f, rowW, "płeć", k.plec ? "ON (samiec)" : "ONA (samica)");
-                    DrawReadOnlyEditRow(startX, baseY +  74.0f, rowW, "wiek", bWiek);
-                    DrawReadOnlyEditRow(startX, baseY +  98.0f, rowW, "żołądek", bZol);
-                    DrawReadOnlyEditRow(startX, baseY + 122.0f, rowW, "ciąża", bCiaz);
-                    DrawReadOnlyEditRow(startX, baseY + 146.0f, rowW, "wielkość", bWielk);
+                    DrawReadOnlyEditRow(startX, baseY +  24.0f, rowW, "Status", stStr);
+                    DrawReadOnlyEditRow(startX, baseY +  48.0f, rowW, "Gender", k.plec ? "Male (XY)" : "Female (XX)");
+                    DrawReadOnlyEditRow(startX, baseY +  72.0f, rowW, "Age / Max", bWiek);
+                    DrawReadOnlyEditRow(startX, baseY +  96.0f, rowW, "Stomach", bZol);
+                    DrawReadOnlyEditRow(startX, baseY + 120.0f, rowW, "Gestation", bCiaz);
+                    DrawReadOnlyEditRow(startX, baseY + 144.0f, rowW, "Body Size", bWielk);
+
+                    // Individual control buttons
+                    if (DrawButton({ startX + 8.0f, baseY + 172.0f, rowW - 16.0f, 24.0f }, "Feed Rabbit (Max Energy)")) {
+                        k.zoladek = (float)sim.zoladekKVal;
+                    }
+                    if (DrawButton({ startX + 8.0f, baseY + 200.0f, rowW - 16.0f, 22.0f }, "Remove Selected Rabbit")) {
+                        sim.Ktab.erase(sim.Ktab.begin() + sim.selectedKrolikIdx);
+                        if (sim.selectedKrolikIdx >= (int)sim.Ktab.size() && sim.selectedKrolikIdx > 0) {
+                            sim.selectedKrolikIdx--;
+                        }
+                    }
                 } else {
-                    DrawLabel(startX + 10.0f, baseY + 40.0f, "Brak królika o tym numerze.", 10, CLR_TEXT);
+                    DrawLabel(startX + 10.0f, baseY + 36.0f, "No rabbit selected.\nClick any rabbit on map\nto inspect and manage.", 10, CLR_TEXT);
+                    if (DrawButton({ startX + 16.0f, baseY + 100.0f, rowW - 32.0f, 32.0f }, "+ Spawn 50 Rabbits")) {
+                        sim.generujKroliki(50);
+                    }
                 }
             }
-            else if (sim.activeInformerTab == 5) { // Mój lis
+            else if (sim.activeInformerTab == 5) { // My Fox (Individual Tracking & Control)
                 int maxL = (sim.Ltab.size() > 0) ? ((int)sim.Ltab.size() - 1) : 0;
-                DrawUpDownRow(startX, baseY + 0.0f, rowW, "Numer lisa", sim.selectedLisIdx, 0, maxL);
+                DrawUpDownRow(startX, baseY + 0.0f, rowW, "Fox #", sim.selectedLisIdx, 0, maxL);
 
                 if (sim.selectedLisIdx >= 0 && sim.selectedLisIdx < (int)sim.Ltab.size()) {
-                    const auto& l = sim.Ltab[sim.selectedLisIdx];
-                    const char* stStr = "nieznany";
+                    auto& l = sim.Ltab[sim.selectedLisIdx];
+                    const char* stStr = "unknown";
                     switch (l.status) {
-                        case 2: stStr = "szuka pary"; break;
-                        case 1: stStr = "goni królika"; break;
-                        case 0: stStr = "kręcioła"; break;
+                        case 2: stStr = "Mating search"; break;
+                        case 1: stStr = "Hunting rabbit"; break;
+                        case 0: stStr = "Prowling"; break;
                     }
                     char bWiek[32], bZol[32], bCiaz[32], bWielk[32];
                     snprintf(bWiek, sizeof(bWiek), "%d / %d", l.wiek, sim.zycieLVal);
@@ -439,17 +431,31 @@ int main() {
                     else snprintf(bCiaz, sizeof(bCiaz), "---");
                     snprintf(bWielk, sizeof(bWielk), "%.2f", l.wielkosc);
 
-                    DrawReadOnlyEditRow(startX, baseY +  26.0f, rowW, "status", stStr);
-                    DrawReadOnlyEditRow(startX, baseY +  50.0f, rowW, "płeć", l.plec ? "ON (samiec)" : "ONA (samica)");
-                    DrawReadOnlyEditRow(startX, baseY +  74.0f, rowW, "wiek", bWiek);
-                    DrawReadOnlyEditRow(startX, baseY +  98.0f, rowW, "żołądek", bZol);
-                    DrawReadOnlyEditRow(startX, baseY + 122.0f, rowW, "ciąża", bCiaz);
-                    DrawReadOnlyEditRow(startX, baseY + 146.0f, rowW, "wielkość", bWielk);
+                    DrawReadOnlyEditRow(startX, baseY +  24.0f, rowW, "Status", stStr);
+                    DrawReadOnlyEditRow(startX, baseY +  48.0f, rowW, "Gender", l.plec ? "Male (XY)" : "Female (XX)");
+                    DrawReadOnlyEditRow(startX, baseY +  72.0f, rowW, "Age / Max", bWiek);
+                    DrawReadOnlyEditRow(startX, baseY +  96.0f, rowW, "Stomach", bZol);
+                    DrawReadOnlyEditRow(startX, baseY + 120.0f, rowW, "Gestation", bCiaz);
+                    DrawReadOnlyEditRow(startX, baseY + 144.0f, rowW, "Body Size", bWielk);
+
+                    // Individual control buttons
+                    if (DrawButton({ startX + 8.0f, baseY + 172.0f, rowW - 16.0f, 24.0f }, "Feed Fox (Max Energy)")) {
+                        l.zoladek = (float)sim.zoladekLVal;
+                    }
+                    if (DrawButton({ startX + 8.0f, baseY + 200.0f, rowW - 16.0f, 22.0f }, "Remove Selected Fox")) {
+                        sim.Ltab.erase(sim.Ltab.begin() + sim.selectedLisIdx);
+                        if (sim.selectedLisIdx >= (int)sim.Ltab.size() && sim.selectedLisIdx > 0) {
+                            sim.selectedLisIdx--;
+                        }
+                    }
                 } else {
-                    DrawLabel(startX + 10.0f, baseY + 40.0f, "Brak lisa o tym numerze.", 10, CLR_TEXT);
+                    DrawLabel(startX + 10.0f, baseY + 36.0f, "No fox selected.\nClick any fox on map\nto inspect and manage.", 10, CLR_TEXT);
+                    if (DrawButton({ startX + 16.0f, baseY + 100.0f, rowW - 32.0f, 32.0f }, "+ Spawn 10 Foxes")) {
+                        sim.generujLisy(10);
+                    }
                 }
             }
-            else if (sim.activeInformerTab == 6) { // Ewolucja
+            else if (sim.activeInformerTab == 6) { // Evolution
                 float sWielkK = 0, sGlodK = 0, sStarvK = 0;
                 if (!sim.Ktab.empty()) {
                     for (const auto& k : sim.Ktab) {
@@ -479,44 +485,45 @@ int main() {
                 snprintf(bWL, sizeof(bWL), "%.2f", sWielkL);
                 snprintf(bGL, sizeof(bGL), "%.1f", sGlodL);
 
-                DrawLabel(startX, baseY + 2.0f, "Średnie króliki:", 10, CLR_NAVY);
-                DrawReadOnlyEditRow(startX, baseY + 18.0f, rowW, "wielkość", bWK);
-                DrawReadOnlyEditRow(startX, baseY + 42.0f, rowW, "głód", bGK);
-                DrawReadOnlyEditRow(startX, baseY + 66.0f, rowW, "GŁÓD!", bSK);
+                DrawLabel(startX, baseY + 2.0f, "Rabbit Population Averages:", 10, CLR_NAVY);
+                DrawReadOnlyEditRow(startX, baseY + 18.0f, rowW, "Avg Body Size", bWK);
+                DrawReadOnlyEditRow(startX, baseY + 42.0f, rowW, "Avg Hunger", bGK);
+                DrawReadOnlyEditRow(startX, baseY + 66.0f, rowW, "Avg STARVING!", bSK);
 
-                DrawLabel(startX, baseY + 96.0f, "Średnie lisy:", 10, CLR_NAVY);
-                DrawReadOnlyEditRow(startX, baseY + 112.0f, rowW, "wielkość", bWL);
-                DrawReadOnlyEditRow(startX, baseY + 136.0f, rowW, "głód", bGL);
+                DrawLabel(startX, baseY + 96.0f, "Fox Population Averages:", 10, CLR_NAVY);
+                DrawReadOnlyEditRow(startX, baseY + 112.0f, rowW, "Avg Body Size", bWL);
+                DrawReadOnlyEditRow(startX, baseY + 136.0f, rowW, "Avg Hunger", bGL);
             }
         }
 
         // -------------------------------------------------------------------------
-        // 3. Dolny panel przycisków nawigacyjnych i pełnego ekranu
+        // 3. Bottom Navigation and Screen Control Panel
         // -------------------------------------------------------------------------
         Rectangle bottomPanelRect = { panelX, panelY + panelH + 8.0f, panelW, 110.0f };
-        DrawGroupBox(bottomPanelRect, "Nawigacja / Ekran");
+        DrawGroupBox(bottomPanelRect, "Navigation / Screen");
 
-        // Przycisk "Powrót"
-        bool canGoBack = (sim.poziom > 0);
-        if (DrawButton({ panelX + 8.0f, panelY + panelH + 24.0f, 68.0f, 40.0f }, "<< Powrót", canGoBack)) {
-            sim.butPowrotClick();
-        }
+        if (sim.poziom == 0) {
+            // In Phase 1 (Island Generator)
+            DrawButton({ panelX + 8.0f, panelY + panelH + 24.0f, 68.0f, 40.0f }, "<< Setup", false);
 
-        // Przycisk "OK >>" lub "Pauza/Wznów"
-        const char* okText = "OK >>";
-        if (sim.poziom == 3) {
-            okText = sim.running ? "Pauza (Spacja)" : "Wznów (Spacja)";
-        }
-        if (DrawButton({ panelX + 82.0f, panelY + panelH + 24.0f, panelW - 90.0f, 40.0f }, okText, true, sim.poziom == 3 ? (sim.running ? CLR_TEXT : RED) : CLR_TEXT)) {
-            if (sim.poziom == 3) {
-                sim.running = !sim.running;
-            } else {
+            if (DrawButton({ panelX + 82.0f, panelY + panelH + 24.0f, panelW - 90.0f, 40.0f }, "Start Simulation >>", true, CLR_TEXT)) {
                 sim.butOkClick();
+            }
+        } else {
+            // In Phase 2 (Ecosystem Management & Simulation)
+            if (DrawButton({ panelX + 8.0f, panelY + panelH + 24.0f, 68.0f, 40.0f }, "<< Island", true)) {
+                sim.butPowrotClick();
+            }
+
+            const char* pauseLabel = sim.running ? "Pause (Space)" : "Resume (Space)";
+            Color pauseCol = sim.running ? CLR_TEXT : RED;
+            if (DrawButton({ panelX + 82.0f, panelY + panelH + 24.0f, panelW - 90.0f, 40.0f }, pauseLabel, true, pauseCol)) {
+                sim.running = !sim.running;
             }
         }
 
-        // Przycisk "Pełny ekran (F11)"
-        const char* fsText = IsWindowFullscreen() ? "Tryb okienkowy (F11)" : "Pełny ekran (F11)";
+        // Fullscreen toggle button
+        const char* fsText = IsWindowFullscreen() ? "Windowed Mode (F11)" : "Fullscreen (F11)";
         if (DrawButton({ panelX + 8.0f, panelY + panelH + 68.0f, panelW - 16.0f, 34.0f }, fsText)) {
             ToggleFullscreen();
         }
@@ -524,7 +531,7 @@ int main() {
         EndTextureMode();
 
         // =========================================================================
-        // RENDEROWANIE DO OKNA Z ZACHOWANIEM PROPORCJI (LETTERBOX FULLSCREEN)
+        // PRESENTATION TO WINDOW WITH ASPECT RATIO PRESERVATION (LETTERBOX)
         // =========================================================================
         BeginDrawing();
         ClearBackground(BLACK);
@@ -538,7 +545,7 @@ int main() {
         EndDrawing();
     }
 
-    // Czyszczenie zasobów
+    // Resource cleanup
     UnloadTexture(islandTexture);
     if (texKrolik.id != 0)  UnloadTexture(texKrolik);
     if (texLis.id != 0)     UnloadTexture(texLis);
