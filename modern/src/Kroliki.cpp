@@ -77,7 +77,28 @@ void Kroliki::generuj(int l, int s, int r) {
     }
 }
 
+#include <algorithm>
+
+static const int CELL_SIZE = 25;
+static const int GRID_COLS = 20; // 500 / 25
+static const int GRID_ROWS = 16; // 400 / 25
+static std::vector<int> s_rabbitGrid[GRID_ROWS][GRID_COLS];
+
 void Kroliki::rusz() {
+    // 1. Fast O(N) spatial partitioning for instant mating lookups
+    for (int r = 0; r < GRID_ROWS; r++) {
+        for (int c = 0; c < GRID_COLS; c++) {
+            s_rabbitGrid[r][c].clear();
+        }
+    }
+    for (int n = 0; n < (int)Ktab->size(); n++) {
+        int gx = (int)(*Ktab)[n].x / CELL_SIZE;
+        int gy = (int)(*Ktab)[n].y / CELL_SIZE;
+        if (gx >= 0 && gx < GRID_COLS && gy >= 0 && gy < GRID_ROWS) {
+            s_rabbitGrid[gy][gx].push_back(n);
+        }
+    }
+
     for (size_t n = 0; n < Ktab->size(); n++) stat((int)n);
     for (size_t n = 0; n < Ktab->size(); n++) rusz((int)n);
 
@@ -211,23 +232,24 @@ void Kroliki::rusz(int n) {
                         (*Ktab)[n].pamiec_trawy[1] = -1;
                     }
                 } else {
-                    // Outward perception: scan expanding rings (radius 4 to 20) for green grass
+                    // Fast directional scent check in 8 compass directions at distance 8, 14, 20
+                    static const int offsets[8][2] = {
+                        { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
+                        { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 }
+                    };
                     bool found = false;
-                    for (int r = 4; r <= 20; r += 4) {
-                        for (int da = -r; da <= r; da += 4) {
-                            for (int db = -r; db <= r; db += 4) {
-                                int nx = (int)(*Ktab)[n].x + da;
-                                int ny = (int)(*Ktab)[n].y + db;
-                                if (nx >= 2 && nx < szer - 2 && ny >= 2 && ny < wys - 2) {
-                                    if (pole[nx][ny] > 1) {
-                                        (*Ktab)[n].pamiec_trawy[0] = nx;
-                                        (*Ktab)[n].pamiec_trawy[1] = ny;
-                                        found = true;
-                                        break;
-                                    }
+                    for (int dist = 8; dist <= 20; dist += 6) {
+                        for (int d = 0; d < 8; d++) {
+                            int nx = (int)(*Ktab)[n].x + offsets[d][0] * dist;
+                            int ny = (int)(*Ktab)[n].y + offsets[d][1] * dist;
+                            if (nx >= 2 && nx < szer - 2 && ny >= 2 && ny < wys - 2) {
+                                if (pole[nx][ny] > 1) {
+                                    (*Ktab)[n].pamiec_trawy[0] = nx;
+                                    (*Ktab)[n].pamiec_trawy[1] = ny;
+                                    found = true;
+                                    break;
                                 }
                             }
-                            if (found) break;
                         }
                         if (found) break;
                     }
@@ -271,15 +293,27 @@ void Kroliki::rusz(int n) {
         float dx = 0.0f, dy = 0.0f;
         int i = -1;
 
-        // Search for nearest mate within natural sensory radius
-        for (size_t m = 0; m < Ktab->size(); m++) {
-            if ((m != (size_t)n) && ((*Ktab)[m].status == 3) && ((*Ktab)[n].plec != (*Ktab)[m].plec) && ((*Ktab)[m].wiek > wiek_dojrz)) {
-                float cdx = (*Ktab)[n].x - (*Ktab)[m].x;
-                float cdy = (*Ktab)[n].y - (*Ktab)[m].y;
-                float odl = cdx * cdx + cdy * cdy;
-                if (odl < min) {
-                    min = odl;
-                    i = (int)m;
+        // Search only adjacent spatial grid cells (O(1) localized search)
+        int gx = (int)(*Ktab)[n].x / CELL_SIZE;
+        int gy = (int)(*Ktab)[n].y / CELL_SIZE;
+        int minGx = std::max(0, gx - 3);
+        int maxGx = std::min(GRID_COLS - 1, gx + 3);
+        int minGy = std::max(0, gy - 3);
+        int maxGy = std::min(GRID_ROWS - 1, gy + 3);
+
+        for (int cy = minGy; cy <= maxGy; cy++) {
+            for (int cx = minGx; cx <= maxGx; cx++) {
+                const auto& cell = s_rabbitGrid[cy][cx];
+                for (int m : cell) {
+                    if (m != n && (*Ktab)[m].status == 3 && ((*Ktab)[n].plec != (*Ktab)[m].plec) && ((*Ktab)[m].wiek > wiek_dojrz)) {
+                        float cdx = (*Ktab)[n].x - (*Ktab)[m].x;
+                        float cdy = (*Ktab)[n].y - (*Ktab)[m].y;
+                        float odl = cdx * cdx + cdy * cdy;
+                        if (odl < min) {
+                            min = odl;
+                            i = m;
+                        }
+                    }
                 }
             }
         }

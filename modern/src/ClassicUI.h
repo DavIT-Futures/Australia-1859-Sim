@@ -33,7 +33,7 @@ namespace ClassicUI {
     void DrawGroupBox(Rectangle rect, const char* caption);
     int  DrawTabs(Rectangle rect, const char* const* tabs, int count, int activeTab);
     bool DrawButton(Rectangle rect, const char* caption, bool enabled = true, Color textColor = CLR_TEXT);
-    bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step = 1, const char* prefix = nullptr);
+    bool DrawNumericRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step = 1, const char* prefix = nullptr);
     bool DrawUpDownRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step = 1, const char* prefix = nullptr);
     void DrawReadOnlyEdit(Rectangle rect, const char* text, Color bgColor = CLR_EDIT_BG, Color textColor = CLR_TEXT);
     void DrawReadOnlyEditRow(float x, float y, float totalW, const char* label, const char* text);

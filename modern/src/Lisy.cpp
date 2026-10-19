@@ -136,13 +136,27 @@ void Lisy::rusz(int n) {
         float min = 99999.0f, dx, dy, odl;
         int i = -1;
 
-        for (size_t m = 0; m < Ktab->size(); m++) {
-            dx = (*Ltab)[n].x - (*Ktab)[m].x;
-            dy = (*Ltab)[n].y - (*Ktab)[m].y;
-            odl = dx * dx + dy * dy;
-            if (odl < min) {
-                min = odl;
-                i = (int)m;
+        if (Ktab->size() > 250) {
+            size_t step = Ktab->size() / 100;
+            if (step < 1) step = 1;
+            for (size_t m = 0; m < Ktab->size(); m += step) {
+                dx = (*Ltab)[n].x - (*Ktab)[m].x;
+                dy = (*Ltab)[n].y - (*Ktab)[m].y;
+                odl = dx * dx + dy * dy;
+                if (odl < min) {
+                    min = odl;
+                    i = (int)m;
+                }
+            }
+        } else {
+            for (size_t m = 0; m < Ktab->size(); m++) {
+                dx = (*Ltab)[n].x - (*Ktab)[m].x;
+                dy = (*Ltab)[n].y - (*Ktab)[m].y;
+                odl = dx * dx + dy * dy;
+                if (odl < min) {
+                    min = odl;
+                    i = (int)m;
+                }
             }
         }
 

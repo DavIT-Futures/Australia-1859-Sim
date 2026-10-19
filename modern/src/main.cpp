@@ -131,8 +131,8 @@ int main() {
         ClassicUI::SetVirtualMouse(vMouse);
 
         // Map layout constants (scaled 1.7x)
-        const float mapLeft = (float)S(8);
-        const float mapTop  = (float)S(8);
+        const float mapLeft = 14.0f;
+        const float mapTop  = 14.0f;
         const float mapW    = (float)Simulation::SZER * SCALE; // 850px
         const float mapH    = (float)Simulation::WYS * SCALE;  // 680px
 
@@ -182,25 +182,29 @@ int main() {
         DrawSunkenBox(mapBorder, BLACK);
         DrawTextureEx(islandTexture, Vector2{ mapLeft, mapTop }, 0.0f, SCALE, WHITE);
 
-        // Draw rabbits (scaled 1.7x)
+        // Draw rabbits (switch to fast crisp points when > 1000 to maintain 60 FPS!)
+        bool fastDotsK = (sim.Ktab.size() > 1000);
+        int dotSizeK = (int)roundf(2.5f * SCALE);
         for (const auto& k : sim.Ktab) {
             float kx = mapLeft + k.x * SCALE;
             float ky = mapTop  + k.y * SCALE;
-            if (texKrolik.id != 0) {
+            if (!fastDotsK && texKrolik.id != 0) {
                 DrawTextureEx(texKrolik, Vector2{ kx - 2.0f * SCALE, ky - 2.0f * SCALE }, 0.0f, SCALE, WHITE);
             } else {
-                DrawRectangle((int)(kx - 1.5f * SCALE), (int)(ky - 1.5f * SCALE), (int)(3.0f * SCALE), (int)(3.0f * SCALE), WHITE);
+                DrawRectangle((int)kx, (int)ky, dotSizeK, dotSizeK, WHITE);
             }
         }
 
-        // Draw foxes (scaled 1.7x)
+        // Draw foxes (switch to fast crisp points when > 200)
+        bool fastDotsL = (sim.Ltab.size() > 200);
+        int dotSizeL = (int)roundf(3.5f * SCALE);
         for (const auto& l : sim.Ltab) {
             float lx = mapLeft + l.x * SCALE;
             float ly = mapTop  + l.y * SCALE;
-            if (texLis.id != 0) {
+            if (!fastDotsL && texLis.id != 0) {
                 DrawTextureEx(texLis, Vector2{ lx - 2.0f * SCALE, ly - 2.0f * SCALE }, 0.0f, SCALE, WHITE);
             } else {
-                DrawRectangle((int)(lx - 2.0f * SCALE), (int)(ly - 2.0f * SCALE), (int)(4.0f * SCALE), (int)(4.0f * SCALE), RED);
+                DrawRectangle((int)lx, (int)ly, dotSizeL, dotSizeL, RED);
             }
         }
 
@@ -227,11 +231,11 @@ int main() {
             }
         }
 
-        // 2. Control Panel on right
-        const float panelX = mapLeft + mapW + (float)S(10);
-        const float panelY = (float)S(8);
-        const float panelW = (float)VIRTUAL_W - panelX - (float)S(8);
-        const float panelH = (float)S(286);
+        // 2. Control Panel on right (Upper part)
+        const float panelX = mapLeft + mapW + 14.0f; // 878px
+        const float panelY = 14.0f;
+        const float panelW = (float)VIRTUAL_W - panelX - 14.0f; // 388px
+        const float panelH = 584.0f; // Dedicated vertical space prevents any overlap!
         Rectangle groupBoxRect = { panelX, panelY, panelW, panelH };
 
         // -------------------------------------------------------------------------
@@ -241,64 +245,63 @@ int main() {
             DrawGroupBox(groupBoxRect, "Island Generator ver. 1.4");
 
             const char* godTabs[] = { "Shape", "Bays", "Adjust", "Terrain" };
-            Rectangle tabRect = { panelX + S(6.0f), panelY + S(18.0f), panelW - S(12.0f), S(20.0f) };
+            Rectangle tabRect = { panelX + 8.0f, panelY + 20.0f, panelW - 16.0f, 28.0f };
             sim.activeGodTab = DrawTabs(tabRect, godTabs, 4, sim.activeGodTab);
 
-            float rowW = panelW - S(24.0f);
-            float startX = panelX + S(12.0f);
+            float rowW = panelW - 24.0f;
+            float startX = panelX + 12.0f;
+            float baseY = panelY + 60.0f;
 
             if (sim.activeGodTab == 0) { // Shape
-                DrawLabel(startX + S(6.0f), panelY + S(54.0f), "Shape Amplitude:", 10, CLR_NAVY);
-                Rectangle rectUp = { startX + S(140.0f), panelY + S(50.0f), S(70.0f), S(22.0f) };
-                DrawUpDown(rectUp, sim.amplitude, 1, 1000, 5);
+                DrawNumericRow(startX, baseY + 10.0f, rowW, "Shape Amplitude", sim.amplitude, 1, 1000, 5);
 
-                if (DrawButton({ startX + S(16.0f), panelY + S(90.0f), rowW - S(32.0f), S(44.0f) }, "Generate Island")) {
+                if (DrawButton({ startX + 10.0f, baseY + 50.0f, rowW - 20.0f, 32.0f }, "Generate Island")) {
                     sim.generujWyspe(sim.amplitude);
                 }
 
-                DrawLabel(startX + S(4.0f), panelY + S(155.0f), "Set shape amplitude and click\n'Generate Island' to forge\na new island boundary.\n\nThen use Bays & Adjust to sculpt.", 10, CLR_TEXT);
+                DrawLabel(startX + 4.0f, baseY + 104.0f, "Set shape amplitude and click\n'Generate Island' to forge\na new island boundary.\n\nThen use Bays & Adjust to sculpt.", 10, CLR_TEXT);
             }
             else if (sim.activeGodTab == 1) { // Bays
-                DrawUpDownRow(startX, panelY + S(48.0f), rowW, "Bay Count", sim.upDownLzatok, 1, 99);
-                DrawUpDownRow(startX, panelY + S(74.0f), rowW, "Bay Size", sim.upDownWZatok, 1, 1000, 5);
-                DrawUpDownRow(startX, panelY + S(100.0f), rowW, "Irregularity", sim.upDownRZatok, 0, 999, 5);
+                DrawNumericRow(startX, baseY + 10.0f, rowW, "Bay Count", sim.upDownLzatok, 1, 99);
+                DrawNumericRow(startX, baseY + 44.0f, rowW, "Bay Size", sim.upDownWZatok, 1, 1000, 5);
+                DrawNumericRow(startX, baseY + 78.0f, rowW, "Irregularity", sim.upDownRZatok, 0, 999, 5);
 
-                if (DrawButton({ startX + S(10.0f), panelY + S(134.0f), rowW - S(20.0f), S(34.0f) }, "Carve Deep Bays")) {
+                if (DrawButton({ startX + 10.0f, baseY + 120.0f, rowW - 20.0f, 30.0f }, "Carve Deep Bays")) {
                     sim.dodajZatoki(sim.upDownLzatok, sim.upDownWZatok, sim.upDownRZatok);
                 }
-                if (DrawButton({ startX + S(10.0f), panelY + S(178.0f), rowW - S(20.0f), S(34.0f) }, "Carve Coastal Bays")) {
+                if (DrawButton({ startX + 10.0f, baseY + 158.0f, rowW - 20.0f, 30.0f }, "Carve Coastal Bays")) {
                     sim.dodajZatokiPlaza(sim.upDownLzatok, sim.upDownWZatok, sim.upDownRZatok);
                 }
             }
             else if (sim.activeGodTab == 2) { // Adjust
-                DrawLabel(startX + S(14.0f), panelY + S(48.0f), "Expand (+)", 10, CLR_NAVY);
-                if (DrawButton({ startX + S(10.0f), panelY + S(66.0f), S(74.0f), S(44.0f) }, "+")) {
+                DrawLabel(startX + 14.0f, baseY + 10.0f, "Expand (+)", 10, CLR_NAVY);
+                if (DrawButton({ startX + 10.0f, baseY + 28.0f, 74.0f, 34.0f }, "+")) {
                     sim.zwiekszLad();
                 }
 
-                DrawLabel(startX + S(124.0f), panelY + S(48.0f), "Shrink (-)", 10, CLR_NAVY);
-                if (DrawButton({ startX + S(120.0f), panelY + S(66.0f), S(74.0f), S(44.0f) }, "-")) {
+                DrawLabel(startX + 124.0f, baseY + 10.0f, "Shrink (-)", 10, CLR_NAVY);
+                if (DrawButton({ startX + 120.0f, baseY + 28.0f, 74.0f, 34.0f }, "-")) {
                     sim.zmniejszLad();
                 }
 
-                DrawUpDownRow(startX, panelY + S(126.0f), rowW, "Smoothing Pass", sim.upDownGladz, 1, 20);
-                if (DrawButton({ startX + S(10.0f), panelY + S(160.0f), rowW - S(20.0f), S(34.0f) }, "Smooth Coastline")) {
+                DrawNumericRow(startX, baseY + 80.0f, rowW, "Smoothing Pass", sim.upDownGladz, 1, 20);
+                if (DrawButton({ startX + 10.0f, baseY + 120.0f, rowW - 20.0f, 30.0f }, "Smooth Coastline")) {
                     sim.wygladz(sim.upDownGladz);
                 }
             }
             else if (sim.activeGodTab == 3) { // Terrain
-                if (DrawUpDownRow(startX, panelY + S(48.0f), rowW, "Beach Width", sim.upDownPlaza, 0, 200, 5) ||
-                    DrawUpDownRow(startX, panelY + S(74.0f), rowW, "Grass Zone", sim.upDownTrawa, 0, 200, 5) ||
-                    DrawUpDownRow(startX, panelY + S(100.0f), rowW, "Snow Zone", sim.upDownSnieg, 0, 200, 5)) {
+                if (DrawNumericRow(startX, baseY + 10.0f, rowW, "Beach Width", sim.upDownPlaza, 0, 200, 5) ||
+                    DrawNumericRow(startX, baseY + 44.0f, rowW, "Grass Zone", sim.upDownTrawa, 0, 200, 5) ||
+                    DrawNumericRow(startX, baseY + 78.0f, rowW, "Snow Zone", sim.upDownSnieg, 0, 200, 5)) {
                     sim.pallad();
                 }
 
-                DrawUpDownRow(startX, panelY + S(128.0f), rowW, "Noise Grain", sim.upDownZiarno, 0, 16);
+                DrawNumericRow(startX, baseY + 112.0f, rowW, "Noise Grain", sim.upDownZiarno, 0, 16);
 
-                if (DrawButton({ startX + S(10.0f), panelY + S(158.0f), rowW - S(20.0f), S(30.0f) }, "Add Terrain Noise")) {
+                if (DrawButton({ startX + 10.0f, baseY + 152.0f, rowW - 20.0f, 28.0f }, "Add Terrain Noise")) {
                     sim.dodajZiarno(sim.upDownZiarno);
                 }
-                if (DrawButton({ startX + S(10.0f), panelY + S(194.0f), rowW - S(20.0f), S(30.0f) }, "Apply Palette")) {
+                if (DrawButton({ startX + 10.0f, baseY + 188.0f, rowW - 20.0f, 28.0f }, "Apply Palette")) {
                     sim.pallad();
                 }
             }
@@ -309,15 +312,15 @@ int main() {
         // -------------------------------------------------------------------------
         else if (sim.poziom == 1) {
             DrawGroupBox(groupBoxRect, "Ecosystem Manager ver. 1.4");
-            float rowW = panelW - S(24.0f);
-            float startX = panelX + S(12.0f);
+            float rowW = panelW - 24.0f;
+            float startX = panelX + 12.0f;
 
-            // Two-row MultiLine TabControl
+            // Two-row MultiLine TabControl with unmistakable active tab styling
             const char* tabsRow1[] = { "Grass", "Rabbits", "Foxes", "Stats" };
             const char* tabsRow2[] = { "My Rabbit", "My Fox", "Evolution" };
 
-            Rectangle tabR1 = { panelX + S(6.0f), panelY + S(18.0f), panelW - S(12.0f), S(18.0f) };
-            Rectangle tabR2 = { panelX + S(6.0f), panelY + S(36.0f), panelW - S(12.0f), S(18.0f) };
+            Rectangle tabR1 = { panelX + 8.0f, panelY + 18.0f, panelW - 16.0f, 26.0f };
+            Rectangle tabR2 = { panelX + 8.0f, panelY + 44.0f, panelW - 16.0f, 26.0f };
 
             int curR1 = (sim.activeInformerTab < 4) ? sim.activeInformerTab : -1;
             int selR1 = DrawTabs(tabR1, tabsRow1, 4, curR1);
@@ -327,62 +330,64 @@ int main() {
             int selR2 = DrawTabs(tabR2, tabsRow2, 3, curR2);
             if (selR2 != curR2 && selR2 >= 0) sim.activeInformerTab = selR2 + 4;
 
-            float baseY = panelY + S(58.0f);
+            float baseY = panelY + 80.0f;
 
             if (sim.activeInformerTab == 0) { // Grass
-                DrawUpDownRow(startX, baseY + S(6.0f), rowW, "Vegetation Rate", sim.wegetacja, 1, 100);
+                DrawNumericRow(startX, baseY + 10.0f, rowW, "Vegetation Rate", sim.wegetacja, 1, 100);
 
-                if (DrawButton({ startX + S(10.0f), baseY + S(40.0f), rowW - S(20.0f), S(34.0f) }, "Lush Grass (Max)")) {
+                if (DrawButton({ startX + 10.0f, baseY + 54.0f, rowW - 20.0f, 30.0f }, "Lush Grass (Max)")) {
                     sim.maxTrawa();
                 }
-                if (DrawButton({ startX + S(10.0f), baseY + S(84.0f), rowW - S(20.0f), S(34.0f) }, "Reset Grass Level")) {
+                if (DrawButton({ startX + 10.0f, baseY + 94.0f, rowW - 20.0f, 30.0f }, "Reset Grass Level")) {
                     sim.resetTrawy();
                 }
-                if (DrawButton({ startX + S(10.0f), baseY + S(128.0f), rowW - S(20.0f), S(34.0f) }, "Mow Grass (Min)")) {
+                if (DrawButton({ startX + 10.0f, baseY + 134.0f, rowW - 20.0f, 30.0f }, "Mow Grass (Min)")) {
                     sim.minTrawa();
                 }
 
-                DrawLabel(startX + S(8.0f), baseY + S(176.0f), "Lower vegetation rate = faster\ngrass growth across the island.", 10, CLR_TEXT);
+                DrawLabel(startX + 8.0f, baseY + 184.0f, "Lower vegetation rate = faster\ngrass growth across the island.", 10, CLR_TEXT);
             }
             else if (sim.activeInformerTab == 1) { // Rabbits
-                DrawUpDownRow(startX, baseY + S(0.0f), rowW, "Spawn Count", sim.upDownIleK, 1, 999, 10);
-                if (DrawButton({ startX + S(8.0f), baseY + S(24.0f), rowW - S(16.0f), S(24.0f) }, "+ Spawn Rabbits Now")) {
+                DrawNumericRow(startX, baseY + 0.0f, rowW, "Spawn Count", sim.upDownIleK, 1, 999, 10);
+                if (DrawButton({ startX + 8.0f, baseY + 28.0f, rowW - 16.0f, 26.0f }, "+ Spawn Rabbits Now")) {
                     sim.generujKroliki(sim.upDownIleK);
                 }
 
                 bool ch = false;
-                ch |= DrawUpDownRow(startX, baseY + S(51.0f), rowW, "Speed (0.1x)", sim.vkVal, 1, 50, 1, "0.1x");
-                ch |= DrawUpDownRow(startX, baseY + S(73.0f), rowW, "Metabolism", sim.metaKVal, 1, 50);
-                ch |= DrawUpDownRow(startX, baseY + S(95.0f), rowW, "Grass Bite", sim.kesKVal, 1, 255);
-                ch |= DrawUpDownRow(startX, baseY + S(117.0f), rowW, "Stomach Size", sim.zoladekKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + S(139.0f), rowW, "Hunger Limit", sim.glodKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + S(161.0f), rowW, "Starving!", sim.starvingKVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + S(183.0f), rowW, "Fox Detection", sim.detekcjaKVal, 1, 200, 5);
-                ch |= DrawUpDownRow(startX, baseY + S(205.0f), rowW, "Lifespan", sim.zycieKVal, 1, 1000, 10);
+                ch |= DrawNumericRow(startX, baseY +  60.0f, rowW, "Speed (0.1x)", sim.vkVal, 1, 50, 1, "0.1x");
+                ch |= DrawNumericRow(startX, baseY +  90.0f, rowW, "Metabolism", sim.metaKVal, 1, 50);
+                ch |= DrawNumericRow(startX, baseY + 120.0f, rowW, "Grass Bite", sim.kesKVal, 1, 255);
+                ch |= DrawNumericRow(startX, baseY + 150.0f, rowW, "Stomach Size", sim.zoladekKVal, 1, 1000, 5);
+                ch |= DrawNumericRow(startX, baseY + 180.0f, rowW, "Hunger Limit", sim.glodKVal, 1, 1000, 5);
+                ch |= DrawNumericRow(startX, baseY + 210.0f, rowW, "Starving!", sim.starvingKVal, 1, 1000, 5);
+                ch |= DrawNumericRow(startX, baseY + 240.0f, rowW, "Fox Detection", sim.detekcjaKVal, 1, 200, 5);
+                ch |= DrawNumericRow(startX, baseY + 270.0f, rowW, "Lifespan", sim.zycieKVal, 1, 1000, 10);
                 if (ch) sim.applyKrolikParams();
 
-                if (DrawButton({ startX + S(8.0f), baseY + S(229.0f), rowW - S(16.0f), S(22.0f) }, "Clear All Rabbits")) {
+                // Clear All Rabbits button - well above the bottom border
+                if (DrawButton({ startX + 8.0f, baseY + 306.0f, rowW - 16.0f, 26.0f }, "Clear All Rabbits")) {
                     sim.krol->czysc();
                 }
             }
             else if (sim.activeInformerTab == 2) { // Foxes
-                DrawUpDownRow(startX, baseY + S(0.0f), rowW, "Spawn Count", sim.upDownIleL, 1, 999, 5);
-                if (DrawButton({ startX + S(8.0f), baseY + S(24.0f), rowW - S(16.0f), S(24.0f) }, "+ Spawn Foxes Now")) {
+                DrawNumericRow(startX, baseY + 0.0f, rowW, "Spawn Count", sim.upDownIleL, 1, 999, 5);
+                if (DrawButton({ startX + 8.0f, baseY + 28.0f, rowW - 16.0f, 26.0f }, "+ Spawn Foxes Now")) {
                     sim.generujLisy(sim.upDownIleL);
                 }
 
                 bool ch = false;
-                ch |= DrawUpDownRow(startX, baseY + S(51.0f), rowW, "Speed (0.1x)", sim.vlVal, 1, 50, 1, "0.1x");
-                ch |= DrawUpDownRow(startX, baseY + S(73.0f), rowW, "Metabolism", sim.metaLVal, 1, 50);
-                ch |= DrawUpDownRow(startX, baseY + S(95.0f), rowW, "Nutritive Val", sim.wodzLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY + S(117.0f), rowW, "Stomach Size", sim.zoladekLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY + S(139.0f), rowW, "Hunger Limit", sim.glodLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY + S(161.0f), rowW, "Lifespan", sim.zycieLVal, 1, 5000, 50);
-                ch |= DrawUpDownRow(startX, baseY + S(183.0f), rowW, "Maturity Age", sim.dojrzaloscLVal, 1, 1000, 5);
-                ch |= DrawUpDownRow(startX, baseY + S(205.0f), rowW, "Gestation", sim.ciazaLVal, 1, 1000, 5);
+                ch |= DrawNumericRow(startX, baseY +  60.0f, rowW, "Speed (0.1x)", sim.vlVal, 1, 50, 1, "0.1x");
+                ch |= DrawNumericRow(startX, baseY +  90.0f, rowW, "Metabolism", sim.metaLVal, 1, 50);
+                ch |= DrawNumericRow(startX, baseY + 120.0f, rowW, "Nutritive Val", sim.wodzLVal, 1, 5000, 50);
+                ch |= DrawNumericRow(startX, baseY + 150.0f, rowW, "Stomach Size", sim.zoladekLVal, 1, 5000, 50);
+                ch |= DrawNumericRow(startX, baseY + 180.0f, rowW, "Hunger Limit", sim.glodLVal, 1, 5000, 50);
+                ch |= DrawNumericRow(startX, baseY + 210.0f, rowW, "Lifespan", sim.zycieLVal, 1, 5000, 50);
+                ch |= DrawNumericRow(startX, baseY + 240.0f, rowW, "Maturity Age", sim.dojrzaloscLVal, 1, 1000, 5);
+                ch |= DrawNumericRow(startX, baseY + 270.0f, rowW, "Gestation", sim.ciazaLVal, 1, 1000, 5);
                 if (ch) sim.applyLisParams();
 
-                if (DrawButton({ startX + S(8.0f), baseY + S(229.0f), rowW - S(16.0f), S(22.0f) }, "Clear All Foxes")) {
+                // Clear All Foxes button - well above the bottom border
+                if (DrawButton({ startX + 8.0f, baseY + 306.0f, rowW - 16.0f, 26.0f }, "Clear All Foxes")) {
                     sim.lis->czysc();
                 }
             }
@@ -397,18 +402,18 @@ int main() {
                 snprintf(bZ2L, sizeof(bZ2L), "%ld", sim.lis ? sim.lis->z2 : 0);
                 snprintf(bTick, sizeof(bTick), "%d", sim.plus);
 
-                DrawReadOnlyEditRow(startX, baseY + S(0.0f),   rowW, "Alive Rabbits", bKr);
-                DrawReadOnlyEditRow(startX, baseY + S(25.0f),  rowW, "Alive Foxes", bLi);
-                DrawReadOnlyEditRow(startX, baseY + S(50.0f),  rowW, "Rabbit Starved", bZ1K);
-                DrawReadOnlyEditRow(startX, baseY + S(75.0f),  rowW, "Rabbit Old Age", bZ2K);
-                DrawReadOnlyEditRow(startX, baseY + S(100.0f), rowW, "Rabbit Hunted", bZ3K);
-                DrawReadOnlyEditRow(startX, baseY + S(125.0f), rowW, "Fox Starved", bZ1L);
-                DrawReadOnlyEditRow(startX, baseY + S(150.0f), rowW, "Fox Old Age", bZ2L);
-                DrawReadOnlyEditRow(startX, baseY + S(175.0f), rowW, "Simulation Tick", bTick);
+                DrawReadOnlyEditRow(startX, baseY +   0.0f, rowW, "Alive Rabbits", bKr);
+                DrawReadOnlyEditRow(startX, baseY +  28.0f, rowW, "Alive Foxes", bLi);
+                DrawReadOnlyEditRow(startX, baseY +  56.0f, rowW, "Rabbit Starved", bZ1K);
+                DrawReadOnlyEditRow(startX, baseY +  84.0f, rowW, "Rabbit Old Age", bZ2K);
+                DrawReadOnlyEditRow(startX, baseY + 112.0f, rowW, "Rabbit Hunted", bZ3K);
+                DrawReadOnlyEditRow(startX, baseY + 140.0f, rowW, "Fox Starved", bZ1L);
+                DrawReadOnlyEditRow(startX, baseY + 168.0f, rowW, "Fox Old Age", bZ2L);
+                DrawReadOnlyEditRow(startX, baseY + 196.0f, rowW, "Simulation Tick", bTick);
             }
             else if (sim.activeInformerTab == 4) { // My Rabbit (Individual Tracking & Control)
                 int maxK = (sim.Ktab.size() > 0) ? ((int)sim.Ktab.size() - 1) : 0;
-                DrawUpDownRow(startX, baseY + S(0.0f), rowW, "Rabbit #", sim.selectedKrolikIdx, 0, maxK);
+                DrawNumericRow(startX, baseY + 0.0f, rowW, "Rabbit #", sim.selectedKrolikIdx, 0, maxK);
 
                 if (sim.selectedKrolikIdx >= 0 && sim.selectedKrolikIdx < (int)sim.Ktab.size()) {
                     auto& k = sim.Ktab[sim.selectedKrolikIdx];
@@ -426,32 +431,32 @@ int main() {
                     else snprintf(bCiaz, sizeof(bCiaz), "---");
                     snprintf(bWielk, sizeof(bWielk), "%.2f", k.wielkosc);
 
-                    DrawReadOnlyEditRow(startX, baseY + S(25.0f),  rowW, "Status", stStr);
-                    DrawReadOnlyEditRow(startX, baseY + S(50.0f),  rowW, "Gender", k.plec ? "Male (XY)" : "Female (XX)");
-                    DrawReadOnlyEditRow(startX, baseY + S(75.0f),  rowW, "Age / Max", bWiek);
-                    DrawReadOnlyEditRow(startX, baseY + S(100.0f), rowW, "Stomach", bZol);
-                    DrawReadOnlyEditRow(startX, baseY + S(125.0f), rowW, "Gestation", bCiaz);
-                    DrawReadOnlyEditRow(startX, baseY + S(150.0f), rowW, "Body Size", bWielk);
+                    DrawReadOnlyEditRow(startX, baseY +  28.0f, rowW, "Status", stStr);
+                    DrawReadOnlyEditRow(startX, baseY +  56.0f, rowW, "Gender", k.plec ? "Male (XY)" : "Female (XX)");
+                    DrawReadOnlyEditRow(startX, baseY +  84.0f, rowW, "Age / Max", bWiek);
+                    DrawReadOnlyEditRow(startX, baseY + 112.0f, rowW, "Stomach", bZol);
+                    DrawReadOnlyEditRow(startX, baseY + 140.0f, rowW, "Gestation", bCiaz);
+                    DrawReadOnlyEditRow(startX, baseY + 168.0f, rowW, "Body Size", bWielk);
 
-                    if (DrawButton({ startX + S(8.0f), baseY + S(178.0f), rowW - S(16.0f), S(26.0f) }, "Feed Rabbit (Max Energy)")) {
+                    if (DrawButton({ startX + 8.0f, baseY + 200.0f, rowW - 16.0f, 26.0f }, "Feed Rabbit (Max Energy)")) {
                         k.zoladek = (float)sim.zoladekKVal;
                     }
-                    if (DrawButton({ startX + S(8.0f), baseY + S(208.0f), rowW - S(16.0f), S(24.0f) }, "Remove Selected Rabbit")) {
+                    if (DrawButton({ startX + 8.0f, baseY + 232.0f, rowW - 16.0f, 24.0f }, "Remove Selected Rabbit")) {
                         sim.Ktab.erase(sim.Ktab.begin() + sim.selectedKrolikIdx);
                         if (sim.selectedKrolikIdx >= (int)sim.Ktab.size() && sim.selectedKrolikIdx > 0) {
                             sim.selectedKrolikIdx--;
                         }
                     }
                 } else {
-                    DrawLabel(startX + S(10.0f), baseY + S(36.0f), "No rabbit selected.\nClick any rabbit on map\nto inspect and manage.", 10, CLR_TEXT);
-                    if (DrawButton({ startX + S(16.0f), baseY + S(100.0f), rowW - S(32.0f), S(34.0f) }, "+ Spawn 50 Rabbits")) {
+                    DrawLabel(startX + 10.0f, baseY + 36.0f, "No rabbit selected.\nClick any rabbit on map\nto inspect and manage.", 10, CLR_TEXT);
+                    if (DrawButton({ startX + 16.0f, baseY + 100.0f, rowW - 32.0f, 30.0f }, "+ Spawn 50 Rabbits")) {
                         sim.generujKroliki(50);
                     }
                 }
             }
             else if (sim.activeInformerTab == 5) { // My Fox (Individual Tracking & Control)
                 int maxL = (sim.Ltab.size() > 0) ? ((int)sim.Ltab.size() - 1) : 0;
-                DrawUpDownRow(startX, baseY + S(0.0f), rowW, "Fox #", sim.selectedLisIdx, 0, maxL);
+                DrawNumericRow(startX, baseY + 0.0f, rowW, "Fox #", sim.selectedLisIdx, 0, maxL);
 
                 if (sim.selectedLisIdx >= 0 && sim.selectedLisIdx < (int)sim.Ltab.size()) {
                     auto& l = sim.Ltab[sim.selectedLisIdx];
@@ -468,25 +473,25 @@ int main() {
                     else snprintf(bCiaz, sizeof(bCiaz), "---");
                     snprintf(bWielk, sizeof(bWielk), "%.2f", l.wielkosc);
 
-                    DrawReadOnlyEditRow(startX, baseY + S(25.0f),  rowW, "Status", stStr);
-                    DrawReadOnlyEditRow(startX, baseY + S(50.0f),  rowW, "Gender", l.plec ? "Male (XY)" : "Female (XX)");
-                    DrawReadOnlyEditRow(startX, baseY + S(75.0f),  rowW, "Age / Max", bWiek);
-                    DrawReadOnlyEditRow(startX, baseY + S(100.0f), rowW, "Stomach", bZol);
-                    DrawReadOnlyEditRow(startX, baseY + S(125.0f), rowW, "Gestation", bCiaz);
-                    DrawReadOnlyEditRow(startX, baseY + S(150.0f), rowW, "Body Size", bWielk);
+                    DrawReadOnlyEditRow(startX, baseY +  28.0f, rowW, "Status", stStr);
+                    DrawReadOnlyEditRow(startX, baseY +  56.0f, rowW, "Gender", l.plec ? "Male (XY)" : "Female (XX)");
+                    DrawReadOnlyEditRow(startX, baseY +  84.0f, rowW, "Age / Max", bWiek);
+                    DrawReadOnlyEditRow(startX, baseY + 112.0f, rowW, "Stomach", bZol);
+                    DrawReadOnlyEditRow(startX, baseY + 140.0f, rowW, "Gestation", bCiaz);
+                    DrawReadOnlyEditRow(startX, baseY + 168.0f, rowW, "Body Size", bWielk);
 
-                    if (DrawButton({ startX + S(8.0f), baseY + S(178.0f), rowW - S(16.0f), S(26.0f) }, "Feed Fox (Max Energy)")) {
+                    if (DrawButton({ startX + 8.0f, baseY + 200.0f, rowW - 16.0f, 26.0f }, "Feed Fox (Max Energy)")) {
                         l.zoladek = (float)sim.zoladekLVal;
                     }
-                    if (DrawButton({ startX + S(8.0f), baseY + S(208.0f), rowW - S(16.0f), S(24.0f) }, "Remove Selected Fox")) {
+                    if (DrawButton({ startX + 8.0f, baseY + 232.0f, rowW - 16.0f, 24.0f }, "Remove Selected Fox")) {
                         sim.Ltab.erase(sim.Ltab.begin() + sim.selectedLisIdx);
                         if (sim.selectedLisIdx >= (int)sim.Ltab.size() && sim.selectedLisIdx > 0) {
                             sim.selectedLisIdx--;
                         }
                     }
                 } else {
-                    DrawLabel(startX + S(10.0f), baseY + S(36.0f), "No fox selected.\nClick any fox on map\nto inspect and manage.", 10, CLR_TEXT);
-                    if (DrawButton({ startX + S(16.0f), baseY + S(100.0f), rowW - S(32.0f), S(34.0f) }, "+ Spawn 10 Foxes")) {
+                    DrawLabel(startX + 10.0f, baseY + 36.0f, "No fox selected.\nClick any fox on map\nto inspect and manage.", 10, CLR_TEXT);
+                    if (DrawButton({ startX + 16.0f, baseY + 100.0f, rowW - 32.0f, 30.0f }, "+ Spawn 10 Foxes")) {
                         sim.generujLisy(10);
                     }
                 }
@@ -521,46 +526,46 @@ int main() {
                 snprintf(bWL, sizeof(bWL), "%.2f", sWielkL);
                 snprintf(bGL, sizeof(bGL), "%.1f", sGlodL);
 
-                DrawLabel(startX, baseY + S(2.0f), "Rabbit Population Averages:", 10, CLR_NAVY);
-                DrawReadOnlyEditRow(startX, baseY + S(20.0f), rowW, "Avg Body Size", bWK);
-                DrawReadOnlyEditRow(startX, baseY + S(46.0f), rowW, "Avg Hunger", bGK);
-                DrawReadOnlyEditRow(startX, baseY + S(72.0f), rowW, "Avg STARVING!", bSK);
+                DrawLabel(startX, baseY + 2.0f, "Rabbit Population Averages:", 10, CLR_NAVY);
+                DrawReadOnlyEditRow(startX, baseY + 24.0f, rowW, "Avg Body Size", bWK);
+                DrawReadOnlyEditRow(startX, baseY + 52.0f, rowW, "Avg Hunger", bGK);
+                DrawReadOnlyEditRow(startX, baseY + 80.0f, rowW, "Avg STARVING!", bSK);
 
-                DrawLabel(startX, baseY + S(104.0f), "Fox Population Averages:", 10, CLR_NAVY);
-                DrawReadOnlyEditRow(startX, baseY + S(122.0f), rowW, "Avg Body Size", bWL);
-                DrawReadOnlyEditRow(startX, baseY + S(148.0f), rowW, "Avg Hunger", bGL);
+                DrawLabel(startX, baseY + 116.0f, "Fox Population Averages:", 10, CLR_NAVY);
+                DrawReadOnlyEditRow(startX, baseY + 138.0f, rowW, "Avg Body Size", bWL);
+                DrawReadOnlyEditRow(startX, baseY + 166.0f, rowW, "Avg Hunger", bGL);
             }
         }
 
         // -------------------------------------------------------------------------
         // 3. Right Bottom Navigation and Screen Control Panel
         // -------------------------------------------------------------------------
-        const float navY = panelY + panelH + S(6.0f);
-        const float navH = mapTop + mapH - navY;
+        const float navY = panelY + panelH + 8.0f; // 606px
+        const float navH = mapTop + mapH - navY;   // 88px
         Rectangle bottomPanelRect = { panelX, navY, panelW, navH };
         DrawGroupBox(bottomPanelRect, "Navigation / Screen");
 
         if (sim.poziom == 0) {
-            DrawButton({ panelX + S(8.0f), navY + S(20.0f), S(78.0f), S(42.0f) }, "<< Setup", false);
+            DrawButton({ panelX + 10.0f, navY + 20.0f, 90.0f, 28.0f }, "<< Setup", false);
 
-            if (DrawButton({ panelX + S(92.0f), navY + S(20.0f), panelW - S(100.0f), S(42.0f) }, "Start Simulation >>", true, CLR_TEXT)) {
+            if (DrawButton({ panelX + 106.0f, navY + 20.0f, panelW - 116.0f, 28.0f }, "Start Simulation >>", true, CLR_TEXT)) {
                 sim.butOkClick();
             }
         } else {
-            if (DrawButton({ panelX + S(8.0f), navY + S(20.0f), S(78.0f), S(42.0f) }, "<< Island", true)) {
+            if (DrawButton({ panelX + 10.0f, navY + 20.0f, 90.0f, 28.0f }, "<< Island", true)) {
                 sim.butPowrotClick();
             }
 
             const char* pauseLabel = sim.running ? "Pause (Space)" : "Resume (Space)";
             Color pauseCol = sim.running ? CLR_TEXT : RED;
-            if (DrawButton({ panelX + S(92.0f), navY + S(20.0f), panelW - S(100.0f), S(42.0f) }, pauseLabel, true, pauseCol)) {
+            if (DrawButton({ panelX + 106.0f, navY + 20.0f, panelW - 116.0f, 28.0f }, pauseLabel, true, pauseCol)) {
                 sim.running = !sim.running;
             }
         }
 
         // Fullscreen toggle button
         const char* fsText = IsWindowFullscreen() ? "Windowed Mode (F11)" : "Fullscreen (F11)";
-        if (DrawButton({ panelX + S(8.0f), navY + S(72.0f), panelW - S(16.0f), S(36.0f) }, fsText)) {
+        if (DrawButton({ panelX + 10.0f, navY + 54.0f, panelW - 20.0f, 26.0f }, fsText)) {
             ToggleFullscreen();
         }
 
@@ -569,101 +574,101 @@ int main() {
         // -------------------------------------------------------------------------
         Simulation::IslandStats stats = sim.getIslandStats();
 
-        const float barY = mapTop + mapH + S(6.0f);
-        const float barH = (float)VIRTUAL_H - barY - S(6.0f);
-        const float barX = (float)S(8.0f);
+        const float barY = mapTop + mapH + 8.0f; // 702px
+        const float barH = (float)VIRTUAL_H - barY - 8.0f; // 38px
+        const float barX = 14.0f;
 
         // Status Panel 1: Alive Rabbits
         char statK[32];
         snprintf(statK, sizeof(statK), "Rabbits: %zu", sim.Ktab.size());
-        Rectangle statBoxK = { barX, barY, S(110.0f), barH };
+        Rectangle statBoxK = { barX, barY, 120.0f, barH };
         DrawSunkenBox(statBoxK, CLR_BG);
-        DrawTextBold(statK, statBoxK.x + S(6.0f), statBoxK.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, CLR_NAVY);
+        DrawTextBold(statK, statBoxK.x + 6.0f, statBoxK.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, CLR_NAVY);
 
         // Status Panel 2: Alive Foxes
         char statL[32];
         snprintf(statL, sizeof(statL), "Foxes: %zu", sim.Ltab.size());
-        Rectangle statBoxL = { barX + S(114.0f), barY, S(100.0f), barH };
+        Rectangle statBoxL = { barX + 126.0f, barY, 110.0f, barH };
         DrawSunkenBox(statBoxL, CLR_BG);
-        DrawTextBold(statL, statBoxL.x + S(6.0f), statBoxL.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, RED);
+        DrawTextBold(statL, statBoxL.x + 6.0f, statBoxL.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, RED);
 
         // Status Panel 3: Grass Biomass / Coverage
         char statGrass[48];
         snprintf(statGrass, sizeof(statGrass), "Grass: %.1f%%", stats.grassPercent);
-        Rectangle statBoxG = { barX + S(218.0f), barY, S(130.0f), barH };
+        Rectangle statBoxG = { barX + 242.0f, barY, 130.0f, barH };
         DrawSunkenBox(statBoxG, CLR_BG);
-        DrawTextBold(statGrass, statBoxG.x + S(6.0f), statBoxG.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, DARKGREEN);
+        DrawTextBold(statGrass, statBoxG.x + 6.0f, statBoxG.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, DARKGREEN);
 
         // Status Panel 4: Simulation Tick
         char statTick[32];
         snprintf(statTick, sizeof(statTick), "Tick: %d", sim.plus);
-        Rectangle statBoxT = { barX + S(352.0f), barY, S(110.0f), barH };
+        Rectangle statBoxT = { barX + 378.0f, barY, 110.0f, barH };
         DrawSunkenBox(statBoxT, CLR_BG);
-        DrawTextBold(statTick, statBoxT.x + S(6.0f), statBoxT.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, CLR_TEXT);
+        DrawTextBold(statTick, statBoxT.x + 6.0f, statBoxT.y + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f, 10, CLR_TEXT);
 
-        // Status Panel 5: Speed Slider / Control Bar
-        float spdPanelX = barX + S(466.0f);
-        float spdPanelW = (float)VIRTUAL_W - barX - spdPanelX;
+        // Status Panel 5: Speed Slider / Control Bar (spans from x=494 to 1266)
+        float spdPanelX = barX + 494.0f; // 508px
+        float spdPanelW = (float)VIRTUAL_W - barX - spdPanelX; // 758px
         Rectangle speedPanel = { spdPanelX, barY, spdPanelW, barH };
         DrawSunkenBox(speedPanel, CLR_BG);
 
-        float curX = spdPanelX + S(8.0f);
+        float curX = spdPanelX + 12.0f;
         float midY = barY + (barH - (float)ClassicUI::GetBaseFontSize()) * 0.5f;
+        float btnY = barY + 6.0f;
+        float btnH = barH - 12.0f; // 26px
+
         DrawTextBold("Speed:", curX, midY, 10, CLR_NAVY);
-        curX += S(50.0f);
+        curX += 58.0f;
 
         // Slower button [-]
-        if (DrawButton({ curX, barY + S(2.0f), S(22.0f), barH - S(4.0f) }, "-")) {
+        if (DrawButton({ curX, btnY, 26.0f, btnH }, "-")) {
             if (speedMultiplier > 1.0f) speedMultiplier -= 1.0f;
             else if (speedMultiplier > 0.5f) speedMultiplier = 0.5f;
             else if (speedMultiplier > 0.25f) speedMultiplier = 0.25f;
         }
-        curX += S(24.0f);
+        curX += 30.0f;
 
         // Current speed readout
         char spdBuf[16];
         if (speedMultiplier < 1.0f) snprintf(spdBuf, sizeof(spdBuf), "%.2fx", speedMultiplier);
         else snprintf(spdBuf, sizeof(spdBuf), "%.0fx", speedMultiplier);
 
-        Rectangle spdValBox = { curX, barY + S(2.0f), S(52.0f), barH - S(4.0f) };
+        Rectangle spdValBox = { curX, btnY, 54.0f, btnH };
         DrawSunkenBox(spdValBox, CLR_YELLOW_BG);
         int spdTw = MeasureTextBold(spdBuf, 10);
         DrawTextBold(spdBuf, spdValBox.x + (spdValBox.width - spdTw) * 0.5f, midY, 10, CLR_TEXT);
-        curX += S(54.0f);
+        curX += 58.0f;
 
         // Faster button [+]
-        if (DrawButton({ curX, barY + S(2.0f), S(22.0f), barH - S(4.0f) }, "+")) {
+        if (DrawButton({ curX, btnY, 26.0f, btnH }, "+")) {
             if (speedMultiplier < 0.5f) speedMultiplier = 0.5f;
             else if (speedMultiplier < 1.0f) speedMultiplier = 1.0f;
             else if (speedMultiplier < 10.0f) speedMultiplier += 1.0f;
         }
-        curX += S(28.0f);
+        curX += 34.0f;
 
-        // Preset speed buttons
-        float preW = S(38.0f);
-        if (DrawButton({ curX, barY + S(2.0f), preW, barH - S(4.0f) }, "0.5x", true, (speedMultiplier == 0.5f) ? RED : CLR_TEXT)) {
+        // Preset speed buttons (every single button fits comfortably!)
+        if (DrawButton({ curX, btnY, 44.0f, btnH }, "0.5x", true, (speedMultiplier == 0.5f) ? RED : CLR_TEXT)) {
             speedMultiplier = 0.5f;
         }
-        curX += preW + S(4.0f);
+        curX += 48.0f;
 
-        preW = S(32.0f);
-        if (DrawButton({ curX, barY + S(2.0f), preW, barH - S(4.0f) }, "1x", true, (speedMultiplier == 1.0f) ? RED : CLR_TEXT)) {
+        if (DrawButton({ curX, btnY, 36.0f, btnH }, "1x", true, (speedMultiplier == 1.0f) ? RED : CLR_TEXT)) {
             speedMultiplier = 1.0f;
         }
-        curX += preW + S(4.0f);
+        curX += 40.0f;
 
-        if (DrawButton({ curX, barY + S(2.0f), preW, barH - S(4.0f) }, "2x", true, (speedMultiplier == 2.0f) ? RED : CLR_TEXT)) {
+        if (DrawButton({ curX, btnY, 36.0f, btnH }, "2x", true, (speedMultiplier == 2.0f) ? RED : CLR_TEXT)) {
             speedMultiplier = 2.0f;
         }
-        curX += preW + S(4.0f);
+        curX += 40.0f;
 
-        if (DrawButton({ curX, barY + S(2.0f), preW, barH - S(4.0f) }, "5x", true, (speedMultiplier == 5.0f) ? RED : CLR_TEXT)) {
+        if (DrawButton({ curX, btnY, 36.0f, btnH }, "5x", true, (speedMultiplier == 5.0f) ? RED : CLR_TEXT)) {
             speedMultiplier = 5.0f;
         }
-        curX += preW + S(4.0f);
+        curX += 40.0f;
 
-        preW = S(42.0f);
-        if (DrawButton({ curX, barY + S(2.0f), preW, barH - S(4.0f) }, "10x", true, (speedMultiplier == 10.0f) ? RED : CLR_TEXT)) {
+        if (DrawButton({ curX, btnY, 44.0f, btnH }, "10x", true, (speedMultiplier == 10.0f) ? RED : CLR_TEXT)) {
             speedMultiplier = 10.0f;
         }
 

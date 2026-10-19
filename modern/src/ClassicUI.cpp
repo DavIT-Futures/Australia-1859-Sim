@@ -2,13 +2,30 @@
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+#include <cstdlib>
 
 namespace ClassicUI {
 
-static Vector2 s_virtualMouse = { 0, 0 };
-static float   s_scale = 1.7f;
-static int     s_baseFontSize = 17;
-static Font    s_fontBold = { 0 };
+static Vector2      s_virtualMouse = { 0, 0 };
+static float        s_scale = 1.7f;
+static int          s_baseFontSize = 17;
+static Font         s_fontBold = { 0 };
+
+// State for active editable numeric text box
+static unsigned int s_activeEditId = 0;
+static char         s_editBuffer[32] = { 0 };
+static int          s_editMinVal = 0;
+static int          s_editMaxVal = 0;
+static int*         s_editTargetVal = nullptr;
+
+static unsigned int HashLabel(const char* str) {
+    if (!str) return 0;
+    unsigned int hash = 5381;
+    for (const char* p = str; *p; p++) {
+        hash = ((hash << 5) + hash) + (unsigned char)(*p);
+    }
+    return hash;
+}
 
 void Init(float scale, const char* fontPath) {
     s_scale = scale;
@@ -132,20 +149,40 @@ int DrawTabs(Rectangle rect, const char* const* tabs, int count, int activeTab) 
             isActive = true;
         }
 
-        DrawRectangleRec(tabRect, CLR_BG);
+        if (isActive) {
+            // Active tab sits 2px taller, highlighted in crisp white, connected seamlessly to panel below
+            Rectangle activeR = { tabRect.x, tabRect.y - 2.0f, tabRect.width, tabRect.height + 4.0f };
+            DrawRectangleRec(activeR, Color{ 248, 248, 248, 255 });
 
-        DrawLine((int)tabRect.x, (int)tabRect.y, (int)(tabRect.x + tabRect.width - 1), (int)tabRect.y, CLR_LIGHT);
-        DrawLine((int)tabRect.x, (int)tabRect.y, (int)tabRect.x, (int)(tabRect.y + tabRect.height), CLR_LIGHT);
-        DrawLine((int)(tabRect.x + tabRect.width - 1), (int)tabRect.y, (int)(tabRect.x + tabRect.width - 1), (int)(tabRect.y + tabRect.height), CLR_DARK_SHADOW);
+            // 3px blue highlight bar at top
+            DrawRectangle((int)activeR.x, (int)activeR.y, (int)activeR.width, 3, Color{ 0, 80, 190, 255 });
 
-        if (!isActive) {
-            DrawLine((int)tabRect.x, (int)(tabRect.y + tabRect.height - 1), (int)(tabRect.x + tabRect.width), (int)(tabRect.y + tabRect.height - 1), CLR_LIGHT);
+            // 3D borders (left, right, top) - NO bottom border
+            DrawLine((int)activeR.x, (int)activeR.y, (int)activeR.x, (int)(activeR.y + activeR.height), CLR_LIGHT);
+            DrawLine((int)(activeR.x + activeR.width - 1), (int)activeR.y, (int)(activeR.x + activeR.width - 1), (int)(activeR.y + activeR.height), CLR_DARK_SHADOW);
+
+            int tw = MeasureTextBold(tabs[i], 10);
+            float tx = activeR.x + (tabWidth - tw) * 0.5f;
+            float ty = activeR.y + 3.0f + (tabHeight - (float)s_baseFontSize) * 0.5f;
+            DrawTextBold(tabs[i], tx, ty, 10, Color{ 0, 0, 120, 255 });
+        } else {
+            // Inactive tab: recessed, darker background, with bottom border separating from panel
+            bool hovered = CheckCollisionPointRec(s_virtualMouse, tabRect);
+            Color tabBg = hovered ? Color{ 215, 210, 202, 255 } : Color{ 180, 175, 168, 255 };
+            DrawRectangleRec(tabRect, tabBg);
+
+            // 3D borders
+            DrawLine((int)tabRect.x, (int)tabRect.y, (int)(tabRect.x + tabRect.width - 1), (int)tabRect.y, CLR_LIGHT);
+            DrawLine((int)tabRect.x, (int)tabRect.y, (int)tabRect.x, (int)(tabRect.y + tabRect.height), CLR_LIGHT);
+            DrawLine((int)(tabRect.x + tabRect.width - 1), (int)tabRect.y, (int)(tabRect.x + tabRect.width - 1), (int)(tabRect.y + tabRect.height), CLR_DARK_SHADOW);
+            // Bottom separating border
+            DrawLine((int)tabRect.x, (int)(tabRect.y + tabRect.height - 1), (int)(tabRect.x + tabRect.width), (int)(tabRect.y + tabRect.height - 1), CLR_DARK_SHADOW);
+
+            int tw = MeasureTextBold(tabs[i], 10);
+            float tx = tabRect.x + (tabWidth - tw) * 0.5f;
+            float ty = tabRect.y + (tabHeight - (float)s_baseFontSize) * 0.5f;
+            DrawTextBold(tabs[i], tx, ty, 10, Color{ 60, 60, 60, 255 });
         }
-
-        int tw = MeasureTextBold(tabs[i], 10);
-        float tx = tabRect.x + (tabWidth - tw) * 0.5f;
-        float ty = tabRect.y + (tabHeight - (float)s_baseFontSize) * 0.5f;
-        DrawTextBold(tabs[i], tx, ty, 10, isActive ? CLR_NAVY : CLR_TEXT);
     }
 
     return activeTab;
@@ -179,51 +216,133 @@ bool DrawButton(Rectangle rect, const char* caption, bool enabled, Color textCol
     return clicked;
 }
 
-bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step, const char* prefix) {
+// Modern Numeric Control: [-] [ Editable Text Box ] [+]
+bool DrawNumericRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step, const char* prefix) {
     bool changed = false;
+    unsigned int id = HashLabel(label);
 
-    float btnW = roundf(15.0f * s_scale);
-    float editW = rect.width - btnW;
-    Rectangle editRect = { rect.x, rect.y, editW, rect.height };
-    Rectangle upRect   = { rect.x + editW, rect.y, btnW, rect.height * 0.5f };
-    Rectangle downRect = { rect.x + editW, rect.y + rect.height * 0.5f, btnW, rect.height * 0.5f };
+    float btnW  = roundf(22.0f * s_scale);
+    float editW = roundf(56.0f * s_scale);
+    float ctrlH = roundf(20.0f * s_scale);
+    float ctrlW = btnW + 2.0f + editW + 2.0f + btnW;
 
-    DrawSunkenBox(editRect, CLR_YELLOW_BG);
+    float ctrlX  = x + totalW - ctrlW;
+    float labelX = x;
 
-    char valBuf[64];
-    if (prefix) snprintf(valBuf, sizeof(valBuf), "%s%d", prefix, value);
-    else snprintf(valBuf, sizeof(valBuf), "%d", value);
+    // Draw label on left
+    DrawTextBold(label, labelX, y + (ctrlH - (float)s_baseFontSize) * 0.5f, 10, CLR_NAVY);
 
-    DrawTextBold(valBuf, editRect.x + 4.0f * s_scale, editRect.y + (editRect.height - (float)s_baseFontSize) * 0.5f, 10, CLR_TEXT);
+    Rectangle minusRect = { ctrlX, y, btnW, ctrlH };
+    Rectangle editRect  = { ctrlX + btnW + 2.0f, y, editW, ctrlH };
+    Rectangle plusRect  = { editRect.x + editW + 2.0f, y, btnW, ctrlH };
 
-    // Up button
-    if (DrawButton(upRect, "^", true)) {
-        if (value + step <= maxVal) {
-            value += step;
-            changed = true;
-        }
-    }
-
-    // Down button
-    if (DrawButton(downRect, "v", true)) {
+    // Slower / Decrement [-] button
+    if (DrawButton(minusRect, "-")) {
         if (value - step >= minVal) {
             value -= step;
             changed = true;
+        } else if (value != minVal) {
+            value = minVal;
+            changed = true;
+        }
+        if (s_activeEditId == id) {
+            snprintf(s_editBuffer, sizeof(s_editBuffer), "%d", value);
         }
     }
+
+    // Faster / Increment [+] button
+    if (DrawButton(plusRect, "+")) {
+        if (value + step <= maxVal) {
+            value += step;
+            changed = true;
+        } else if (value != maxVal) {
+            value = maxVal;
+            changed = true;
+        }
+        if (s_activeEditId == id) {
+            snprintf(s_editBuffer, sizeof(s_editBuffer), "%d", value);
+        }
+    }
+
+    // Text box in middle (clickable and editable with keyboard)
+    bool isFocused = (s_activeEditId == id);
+
+    if (CheckCollisionPointRec(s_virtualMouse, editRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        s_activeEditId = id;
+        s_editMinVal = minVal;
+        s_editMaxVal = maxVal;
+        s_editTargetVal = &value;
+        snprintf(s_editBuffer, sizeof(s_editBuffer), "%d", value);
+        isFocused = true;
+    } else if (isFocused && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(s_virtualMouse, editRect)) {
+        // Clicked outside: commit value
+        int v = atoi(s_editBuffer);
+        if (v < minVal) v = minVal;
+        if (v > maxVal) v = maxVal;
+        if (value != v) {
+            value = v;
+            changed = true;
+        }
+        s_activeEditId = 0;
+        isFocused = false;
+    }
+
+    if (isFocused) {
+        // Read typed characters
+        int key = GetCharPressed();
+        while (key > 0) {
+            if ((key >= '0' && key <= '9') || (key == '-' && strlen(s_editBuffer) == 0 && minVal < 0)) {
+                size_t len = strlen(s_editBuffer);
+                if (len < 10) {
+                    s_editBuffer[len] = (char)key;
+                    s_editBuffer[len + 1] = '\0';
+                }
+            }
+            key = GetCharPressed();
+        }
+
+        if (IsKeyPressed(KEY_BACKSPACE)) {
+            size_t len = strlen(s_editBuffer);
+            if (len > 0) {
+                s_editBuffer[len - 1] = '\0';
+            }
+        }
+
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+            int v = atoi(s_editBuffer);
+            if (v < minVal) v = minVal;
+            if (v > maxVal) v = maxVal;
+            if (value != v) {
+                value = v;
+                changed = true;
+            }
+            s_activeEditId = 0;
+            isFocused = false;
+        }
+    }
+
+    // Render edit box
+    DrawSunkenBox(editRect, isFocused ? Color{ 255, 255, 255, 255 } : CLR_YELLOW_BG);
+
+    char dispBuf[64];
+    if (isFocused) {
+        bool showCursor = ((int)(GetTime() * 2.5) % 2 == 0);
+        snprintf(dispBuf, sizeof(dispBuf), "%s%s", s_editBuffer, showCursor ? "|" : "");
+    } else {
+        if (prefix) snprintf(dispBuf, sizeof(dispBuf), "%s%d", prefix, value);
+        else snprintf(dispBuf, sizeof(dispBuf), "%d", value);
+    }
+
+    int tw = MeasureTextBold(dispBuf, 10);
+    float tx = editRect.x + (editRect.width - tw) * 0.5f;
+    float ty = editRect.y + (editRect.height - (float)s_baseFontSize) * 0.5f;
+    DrawTextBold(dispBuf, tx, ty, 10, isFocused ? Color{ 0, 0, 180, 255 } : CLR_TEXT);
 
     return changed;
 }
 
 bool DrawUpDownRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step, const char* prefix) {
-    float upDownW = roundf(58.0f * s_scale);
-    float upDownH = roundf(19.0f * s_scale);
-    float labelX = x;
-    float upDownX = x + totalW - upDownW;
-
-    DrawTextBold(label, labelX, y + 3.0f * s_scale, 10, CLR_NAVY);
-    Rectangle rect = { upDownX, y, upDownW, upDownH };
-    return DrawUpDown(rect, value, minVal, maxVal, step, prefix);
+    return DrawNumericRow(x, y, totalW, label, value, minVal, maxVal, step, prefix);
 }
 
 void DrawReadOnlyEdit(Rectangle rect, const char* text, Color bgColor, Color textColor) {
@@ -233,11 +352,11 @@ void DrawReadOnlyEdit(Rectangle rect, const char* text, Color bgColor, Color tex
 
 void DrawReadOnlyEditRow(float x, float y, float totalW, const char* label, const char* text) {
     float editW = roundf(60.0f * s_scale);
-    float editH = roundf(19.0f * s_scale);
+    float editH = roundf(20.0f * s_scale);
     float labelX = x;
     float editX = x + totalW - editW;
 
-    DrawTextBold(label, labelX, y + 3.0f * s_scale, 10, CLR_NAVY);
+    DrawTextBold(label, labelX, y + (editH - (float)s_baseFontSize) * 0.5f, 10, CLR_NAVY);
     Rectangle rect = { editX, y, editW, editH };
     DrawReadOnlyEdit(rect, text, CLR_EDIT_BG, CLR_TEXT);
 }
