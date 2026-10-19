@@ -16,7 +16,7 @@ namespace ClassicUI {
     const Color CLR_EDIT_BG     = { 255, 255, 255, 255 }; // TEdit background (clWindow)
     const Color CLR_YELLOW_BG   = { 255, 255, 128, 255 }; // Borland yellow edit background
 
-    void Init(float scale = 1.7f, const char* fontPath = "assets/tahomabd.ttf");
+    void Init(float scale = 1.7f, const char* fontPath = "assets/tahoma.ttf");
     void Shutdown();
 
     void SetVirtualMouse(Vector2 mouse);

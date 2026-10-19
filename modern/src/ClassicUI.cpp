@@ -32,13 +32,15 @@ void Init(float scale, const char* fontPath) {
     s_baseFontSize = (int)roundf(10.0f * scale);
     if (s_baseFontSize < 10) s_baseFontSize = 10;
 
-    // Load crisp TrueType Bold font (Tahoma Bold or Segoe UI Bold)
+    // Load crisp TrueType Regular font (Tahoma or Segoe UI)
     if (fontPath && FileExists(fontPath)) {
         s_fontBold = LoadFontEx(fontPath, s_baseFontSize, NULL, 0);
+    } else if (FileExists("assets/tahoma.ttf")) {
+        s_fontBold = LoadFontEx("assets/tahoma.ttf", s_baseFontSize, NULL, 0);
+    } else if (FileExists("assets/segoeui.ttf")) {
+        s_fontBold = LoadFontEx("assets/segoeui.ttf", s_baseFontSize, NULL, 0);
     } else if (FileExists("assets/tahomabd.ttf")) {
         s_fontBold = LoadFontEx("assets/tahomabd.ttf", s_baseFontSize, NULL, 0);
-    } else if (FileExists("assets/segoeuib.ttf")) {
-        s_fontBold = LoadFontEx("assets/segoeuib.ttf", s_baseFontSize, NULL, 0);
     }
 
     if (s_fontBold.texture.id != 0) {
@@ -78,7 +80,6 @@ void DrawTextBold(const char* text, float x, float y, int size, Color color) {
         DrawTextEx(s_fontBold, text, Vector2{ x, y }, (float)actualSize, 1.0f, color);
     } else {
         DrawText(text, (int)x, (int)y, actualSize, color);
-        DrawText(text, (int)x + 1, (int)y, actualSize, color);
     }
 }
 

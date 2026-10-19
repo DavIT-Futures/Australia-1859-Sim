@@ -511,17 +511,25 @@ void Simulation::resetTrawy() {
 }
 
 void Simulation::maxTrawa() {
+    int minG = SLONA + upDownPlaza;
+    int maxG = SLONA + upDownPlaza + upDownTrawa + 64;
     for (int x = 0; x < SZER; x++) {
         for (int y = 0; y < WYS; y++) {
-            if (trawa[x][y] > 0) trawa[x][y] = 255;
+            if (wyspa[x][y] >= minG && wyspa[x][y] < maxG) {
+                trawa[x][y] = 255;
+            }
         }
     }
 }
 
 void Simulation::minTrawa() {
+    int minG = SLONA + upDownPlaza;
+    int maxG = SLONA + upDownPlaza + upDownTrawa + 64;
     for (int x = 0; x < SZER; x++) {
         for (int y = 0; y < WYS; y++) {
-            if (trawa[x][y] > 0) trawa[x][y] = 1;
+            if (wyspa[x][y] >= minG && wyspa[x][y] < maxG) {
+                trawa[x][y] = 0; // True 0 grass level (visible yellow dirt)!
+            }
         }
     }
 }
@@ -562,14 +570,19 @@ void Simulation::generujLisy(int ile) {
 void Simulation::update() {
     if (!running) return;
 
+    int minG = SLONA + upDownPlaza;
+    int maxG = SLONA + upDownPlaza + upDownTrawa + 64;
+
     for (int step = 0; step < simSpeed; step++) {
         if (poziom >= 1) {
-            // Trawa rośnie losowo w zależności od wegetacji
+            // Trawa rośnie na lądzie nawet od zera w zależności od parametru wegetacji
             for (int x = 0; x < SZER; x++) {
                 for (int y = 0; y < WYS; y++) {
-                    if (trawa[x][y] > 0 && trawa[x][y] < 255) {
-                        if (random(wegetacja) == 0) {
-                            trawa[x][y]++;
+                    if (wyspa[x][y] >= minG && wyspa[x][y] < maxG) {
+                        if (trawa[x][y] >= 0 && trawa[x][y] < 255) {
+                            if (random(wegetacja) == 0) {
+                                trawa[x][y]++;
+                            }
                         }
                     }
                 }
@@ -601,33 +614,50 @@ void Simulation::update() {
 }
 
 void Simulation::renderToRGBA(uint8_t* rgbaBuffer) {
-    const float zielen = 192.0f / 255.0f;
+    int minG = SLONA + upDownPlaza;
+    int maxG = SLONA + upDownPlaza + upDownTrawa + 64;
 
     for (int y = 0; y < WYS; y++) {
         int rowOffset = y * SZER * 4;
         for (int x = 0; x < SZER; x++) {
             int idx = rowOffset + x * 4;
-            int palIdx = wyspa[x][y];
-            if (palIdx < 0) palIdx = 0;
-            if (palIdx >= 800) palIdx = 799;
+            int a = wyspa[x][y];
+            if (a < 0) a = 0;
+            if (a >= 800) a = 799;
 
-            float r = (float)pal[palIdx].r;
-            float g = (float)pal[palIdx].g;
-            float b = (float)pal[palIdx].b;
+            uint8_t outR, outG, outB;
 
-            if (trawa[x][y] > 0) {
-                float tmpi = (float)trawa[x][y];
-                float zi = tmpi * zielen;
-                float tmp2 = (255.0f - tmpi) / 255.0f;
+            if (a < minG) {
+                // Ocean water waves or coastal beach sand
+                outR = pal[a].r;
+                outG = pal[a].g;
+                outB = pal[a].b;
+            } else if (a < maxG) {
+                // Grassland vegetation zone:
+                // 0 grass = dry yellow dirt (RGB: 224, 196, 48)
+                // 255 grass = deep lush dark green (RGB: 12, 128, 12)
+                int tr = trawa[x][y];
+                if (tr < 0) tr = 0;
+                if (tr > 255) tr = 255;
 
-                r = r * tmp2;
-                g = g * tmp2 + zi;
-                b = b * tmp2;
+                float factor = (float)tr / 255.0f;
+                float r = 224.0f + (12.0f - 224.0f) * factor;
+                float g = 196.0f + (128.0f - 196.0f) * factor;
+                float b =  48.0f + ( 12.0f -  48.0f) * factor;
+
+                outR = (uint8_t)r;
+                outG = (uint8_t)g;
+                outB = (uint8_t)b;
+            } else {
+                // Rocky mountain peaks, snow and volcano
+                outR = pal[a].r;
+                outG = pal[a].g;
+                outB = pal[a].b;
             }
 
-            rgbaBuffer[idx + 0] = (uint8_t)(r > 255.0f ? 255 : (r < 0.0f ? 0 : r));
-            rgbaBuffer[idx + 1] = (uint8_t)(g > 255.0f ? 255 : (g < 0.0f ? 0 : g));
-            rgbaBuffer[idx + 2] = (uint8_t)(b > 255.0f ? 255 : (b < 0.0f ? 0 : b));
+            rgbaBuffer[idx + 0] = outR;
+            rgbaBuffer[idx + 1] = outG;
+            rgbaBuffer[idx + 2] = outB;
             rgbaBuffer[idx + 3] = 255;
         }
     }
@@ -635,16 +665,19 @@ void Simulation::renderToRGBA(uint8_t* rgbaBuffer) {
 
 Simulation::IslandStats Simulation::getIslandStats() const {
     IslandStats stats;
+    int minG = SLONA + upDownPlaza;
+    int maxG = SLONA + upDownPlaza + upDownTrawa + 64;
+
     for (int x = 0; x < SZER; x += 2) {
         for (int y = 0; y < WYS; y += 2) {
             int a = wyspa[x][y];
-            if (a >= SLONA) {
+            if (a >= minG && a < maxG) {
                 stats.landCells++;
+                stats.maxGrass += 255;
                 int tr = trawa[x][y];
                 if (tr > 0) {
                     stats.greenCells++;
                     stats.totalGrass += tr;
-                    stats.maxGrass += 255;
                 }
             }
         }

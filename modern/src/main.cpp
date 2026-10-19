@@ -45,8 +45,8 @@ int main() {
     SetWindowMinSize(960, 560);
     SetTargetFPS(60);
 
-    // Initialize ClassicUI with 1.7x scaling and Tahoma Bold TrueType font
-    ClassicUI::Init(SCALE, "assets/tahomabd.ttf");
+    // Initialize ClassicUI with 1.7x scaling and Tahoma Regular TrueType font
+    ClassicUI::Init(SCALE, "assets/tahoma.ttf");
 
     // RenderTexture for fixed virtual resolution and pixel-perfect letterbox scaling
     RenderTexture2D target = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);

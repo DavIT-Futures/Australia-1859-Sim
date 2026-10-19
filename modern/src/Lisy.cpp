@@ -146,6 +146,7 @@ void Lisy::rusz(int n) {
                 if (odl < min) {
                     min = odl;
                     i = (int)m;
+                    if (min < 16.0f) break;
                 }
             }
         } else {
@@ -156,6 +157,7 @@ void Lisy::rusz(int n) {
                 if (odl < min) {
                     min = odl;
                     i = (int)m;
+                    if (min < 16.0f) break;
                 }
             }
         }
@@ -208,6 +210,7 @@ void Lisy::rusz(int n) {
                 if (odl < min) {
                     min = odl;
                     i = (int)m;
+                    if (min < 16.0f) break;
                 }
             }
         }
@@ -228,7 +231,7 @@ void Lisy::rusz(int n) {
             x = (*Ltab)[n].x - dx;
             y = (*Ltab)[n].y - dy;
 
-            if ((min < 10.0f) && (Ltab->size() < 6000) && ((*Ltab)[n].ciaza < 0) && ((*Ltab)[n].plec == false)) {
+            if ((min < 10.0f) && (Ltab->size() < 100000) && ((*Ltab)[n].ciaza < 0) && ((*Ltab)[n].plec == false)) {
                 (*Ltab)[n].ciaza = dl_ciazy;
                 if ((*Ltab)[n].plod == nullptr) (*Ltab)[n].plod = new PlodL();
 

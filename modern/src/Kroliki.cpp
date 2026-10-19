@@ -127,24 +127,26 @@ void Kroliki::stat(int n) {
 
     if (((*Ktab)[n].zoladek < (*Ktab)[n].glod) || ((*Ktab)[n].ciaza >= 0)) (*Ktab)[n].status = 2;
 
-    float min = 99999.0f, odl, dx, dy;
-    int i = -1;
+    if (!Ltab->empty()) {
+        float minOdl = (float)(pole_widz * pole_widz);
+        int nearestFox = -1;
 
-    for (size_t m = 0; m < Ltab->size(); m++) {
-        dx = (*Ktab)[n].x - (*Ltab)[m].x;
-        dy = (*Ktab)[n].y - (*Ltab)[m].y;
-        odl = dx * dx + dy * dy;
-        if (odl < min) {
-            min = odl;
-            i = (int)m;
+        for (size_t m = 0; m < Ltab->size(); m++) {
+            float dx = (*Ktab)[n].x - (*Ltab)[m].x;
+            float dy = (*Ktab)[n].y - (*Ltab)[m].y;
+            float odl = dx * dx + dy * dy;
+            if (odl < minOdl) {
+                minOdl = odl;
+                nearestFox = (int)m;
+            }
+        }
+
+        if (nearestFox >= 0) {
+            (*Ktab)[n].status = 1;
+            (*Ktab)[n].index = nearestFox;
         }
     }
-    if (i >= 0) min = sqrtf(min);
 
-    if (min < pole_widz) {
-        (*Ktab)[n].status = 1;
-        (*Ktab)[n].index = i;
-    }
     if ((*Ktab)[n].zoladek <= (*Ktab)[n].starving) (*Ktab)[n].status = 0;
 }
 
@@ -232,20 +234,29 @@ void Kroliki::rusz(int n) {
                         (*Ktab)[n].pamiec_trawy[1] = -1;
                     }
                 } else {
-                    // Fast directional scent check in 8 compass directions at distance 8, 14, 20
+                    // Unbiased directional scent check across 8 compass directions
                     static const int offsets[8][2] = {
-                        { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
-                        { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 }
+                        {  1,  0 }, { -1,  0 }, {  0,  1 }, {  0, -1 },
+                        {  1,  1 }, { -1,  1 }, {  1, -1 }, { -1, -1 }
                     };
                     bool found = false;
-                    for (int dist = 8; dist <= 20; dist += 6) {
-                        for (int d = 0; d < 8; d++) {
+                    int startD = random(8); // Randomize start to prevent directional drift or corner gathering
+                    for (int dist = 8; dist <= 44; dist += 8) {
+                        for (int step = 0; step < 8; step++) {
+                            int d = (startD + step) % 8;
                             int nx = (int)(*Ktab)[n].x + offsets[d][0] * dist;
                             int ny = (int)(*Ktab)[n].y + offsets[d][1] * dist;
                             if (nx >= 2 && nx < szer - 2 && ny >= 2 && ny < wys - 2) {
-                                if (pole[nx][ny] > 1) {
+                                if (pole[nx][ny] > 0) {
                                     (*Ktab)[n].pamiec_trawy[0] = nx;
                                     (*Ktab)[n].pamiec_trawy[1] = ny;
+                                    float fdx = (float)nx - (*Ktab)[n].x;
+                                    float fdy = (float)ny - (*Ktab)[n].y;
+                                    float fdist = sqrtf(fdx * fdx + fdy * fdy);
+                                    if (fdist > 0.0f) {
+                                        x = (*Ktab)[n].x + vk * fdx / fdist;
+                                        y = (*Ktab)[n].y + vk * fdy / fdist;
+                                    }
                                     found = true;
                                     break;
                                 }
@@ -255,15 +266,15 @@ void Kroliki::rusz(int n) {
                     }
                     if (!found) {
                         // Gentle random wander across land to explore the island
-                        x = (*Ktab)[n].x + (float)(random(3) - 1);
-                        y = (*Ktab)[n].y + (float)(random(3) - 1);
+                        x = (*Ktab)[n].x + (float)(random(5) - 2) * vk;
+                        y = (*Ktab)[n].y + (float)(random(5) - 2) * vk;
                     }
                 }
             }
         } else {
             if (pole[(int)x][(int)y] < (*Ktab)[n].kes + 1) {
                 (*Ktab)[n].zoladek += pole[(int)x][(int)y];
-                pole[(int)x][(int)y] = 1;
+                pole[(int)x][(int)y] = 0;
             } else {
                 (*Ktab)[n].zoladek += (*Ktab)[n].kes;
                 pole[(int)x][(int)y] -= (int)(*Ktab)[n].kes;
@@ -312,10 +323,13 @@ void Kroliki::rusz(int n) {
                         if (odl < min) {
                             min = odl;
                             i = m;
+                            if (min < 16.0f) break; // Within 4px is immediately adjacent
                         }
                     }
                 }
+                if (min < 16.0f) break;
             }
+            if (min < 16.0f) break;
         }
 
         if (i >= 0) {
@@ -335,7 +349,7 @@ void Kroliki::rusz(int n) {
             x = (*Ktab)[n].x - dx;
             y = (*Ktab)[n].y - dy;
 
-            if ((min < 5.0f) && (Ktab->size() < 6000) && ((*Ktab)[n].ciaza < 0) && ((*Ktab)[n].plec == false)) {
+            if ((min < 5.0f) && (Ktab->size() < 100000) && ((*Ktab)[n].ciaza < 0) && ((*Ktab)[n].plec == false)) {
                 (*Ktab)[n].ciaza = dl_ciazy;
                 if ((*Ktab)[n].plod == nullptr) (*Ktab)[n].plod = new PlodK();
 
