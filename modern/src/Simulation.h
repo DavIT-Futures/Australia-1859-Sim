@@ -119,6 +119,16 @@ public:
     void update();
     void renderToRGBA(uint8_t* rgbaBuffer);
 
+    struct IslandStats {
+        int totalGrass = 0;
+        int maxGrass = 0;
+        float grassPercent = 0.0f;
+        int landCells = 0;
+        int greenCells = 0;
+    };
+
+    IslandStats getIslandStats() const;
+
     void fale();
     void lad();
     void pallad();

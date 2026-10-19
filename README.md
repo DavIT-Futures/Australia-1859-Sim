@@ -144,8 +144,17 @@ The project includes a modern, high-performance port in `modern/` running at 60 
    * **Clicking any animal on the 500x400 map** instantly locks onto it with the target marker (`wybrany.bmp`) and opens its card in `My Rabbit` or `My Fox`!
    * Click **`<< Island`** at any time to return to island generation and re-sculpt the land.
 
-### 🖥️ Authentic Borland C++Builder Controls & Fullscreen:
+### 🖥️ Authentic Borland C++Builder Controls, Bold Typography & Status Bar:
 * **Retro Win95/Win2000 UI:** 3D sunken/raised borders, etched GroupBoxes, yellow TEdit fields, TUpDown numeric spinbox arrows (`^`/`v`), MultiLine tabs.
+* **Bold Pixel Typography:** Crisp, readable, bold retro font (`MS Sans Serif [fsBold]` aesthetic) with point-filtering to prevent modern texture blurring.
+* **📊 Bottom Live Telemetry & Stats Bar:** Real-time metrics rendered in sunken Win95 status panels:
+  * **Rabbits alive:** Instantaneous population count.
+  * **Foxes alive:** Instantaneous predator count.
+  * **Grass Coverage:** Exact biomass percentage across the island (`Grass: XX.X%`).
+  * **Simulation Tick:** Current evolutionary step counter.
+* **⏱️ Interactive Speed Controller:** Slow down or accelerate the simulation anytime:
+  * Fine-grained `[-]` and `[+]` stepping buttons.
+  * 1-click speed presets: **`0.5x`** (slow-motion observation), **`1x`** (normal), **`2x`**, **`5x`**, **`10x`** (fast-forward evolution).
 * **🖥️ Fullscreen (F11):** Toggle between windowed and fullscreen with the button or **`F11`** hotkey. Uses letterboxed virtual resolution so graphics and mouse coordinates remain pixel-perfect on any screen resolution.
 
 ### 🎮 How to Run (Prebuilt Executable):
@@ -156,7 +165,8 @@ Just double-click to run on Windows 10 & 11 with zero dependencies!
 ### ⌨️ Controls & Hotkeys:
 * **`[F11]`** / **Panel Button** – Fullscreen toggle (Letterbox 4:3 / 16:9)
 * **`[SPACE]`** – Start simulation (Phase 1) / Pause or Resume (Phase 2)
-* **`[1] / [2] / [3] / [4]`** – Simulation speed multipliers (1x, 2x, 5x, 10x)
+* **`[-]` / `[+]` / Bottom Bar Buttons** – Adjust simulation speed (`0.25x` to `10.0x`)
+* **`[1] / [2] / [3] / [4] / [5]`** – Speed presets (`0.5x`, `1x`, `2x`, `5x`, `10x`)
 * **`Mouse Click on Island Map`** – Select and lock onto the closest rabbit or fox (`My Rabbit` / `My Fox`)
 * **`Clicking Tabs and UpDown Spinners`** – Adjust parameters, spawn animals, and manage genetics in real time!
 

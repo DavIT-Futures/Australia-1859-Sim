@@ -8,9 +8,9 @@
 
 using namespace ClassicUI;
 
-// Virtual canvas dimensions matching the authentic Borland C++Builder 6 window
+// Virtual canvas dimensions matching the authentic Borland C++Builder 6 window + bottom status bar
 static const int VIRTUAL_W = 752;
-static const int VIRTUAL_H = 418;
+static const int VIRTUAL_H = 438;
 
 // Helper to load BMP sprites with Magenta colorkey (clFuchsia 0xFF00FF) transparency
 static Texture2D LoadTransparentBMP(const char* path1, const char* path2) {
@@ -33,33 +33,16 @@ static Texture2D LoadTransparentBMP(const char* path1, const char* path2) {
 int main() {
     // Initial window size (1.6x logical resolution for crisp display on high-DPI monitors)
     const int startWindowW = 1200;
-    const int startWindowH = 668;
+    const int startWindowH = 698;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(startWindowW, startWindowH, "Australia 1859 Sim - Island Ecosystem Simulator (Dawid Domagala)");
-    SetWindowMinSize(752, 418);
+    SetWindowMinSize(752, 438);
     SetTargetFPS(60);
 
     // RenderTexture for fixed virtual resolution and pixel-perfect letterbox scaling
     RenderTexture2D target = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
     SetTextureFilter(target.texture, TEXTURE_FILTER_POINT);
-
-    // Load clean, crisp TrueType font for all UI text (Segoe UI / Tahoma)
-    Font uiFont = { 0 };
-    if (FileExists("assets/segoeui.ttf")) {
-        uiFont = LoadFontEx("assets/segoeui.ttf", 26, 0, 0);
-    } else if (FileExists("segoeui.ttf")) {
-        uiFont = LoadFontEx("segoeui.ttf", 26, 0, 0);
-    } else if (FileExists("C:\\Windows\\Fonts\\segoeui.ttf")) {
-        uiFont = LoadFontEx("C:\\Windows\\Fonts\\segoeui.ttf", 26, 0, 0);
-    } else if (FileExists("C:\\Windows\\Fonts\\tahoma.ttf")) {
-        uiFont = LoadFontEx("C:\\Windows\\Fonts\\tahoma.ttf", 26, 0, 0);
-    }
-
-    if (uiFont.texture.id != 0) {
-        SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR);
-        ClassicUI::SetUIFont(uiFont);
-    }
 
     Simulation sim;
 
@@ -79,6 +62,10 @@ int main() {
     Texture2D texLis     = LoadTransparentBMP("assets/lis.bmp", "lis.bmp");
     Texture2D texWybrany = LoadTransparentBMP("assets/wybrany.bmp", "wybrany.bmp");
 
+    // Speed multiplier & accumulator
+    float speedMultiplier = 1.0f; // 0.25x, 0.5x, 1.0x, 2.0x, 3.0x, 5.0f, 10.0f
+    float simAccumulator = 0.0f;
+
     while (!WindowShouldClose()) {
         // --- Fullscreen toggle (F11) ---
         if (IsKeyPressed(KEY_F11)) {
@@ -93,13 +80,29 @@ int main() {
                 sim.butOkClick();
             }
         }
-        if (IsKeyPressed(KEY_ONE))   sim.simSpeed = 1;
-        if (IsKeyPressed(KEY_TWO))   sim.simSpeed = 2;
-        if (IsKeyPressed(KEY_THREE)) sim.simSpeed = 5;
-        if (IsKeyPressed(KEY_FOUR))  sim.simSpeed = 10;
+        if (IsKeyPressed(KEY_ONE))   speedMultiplier = 1.0f;
+        if (IsKeyPressed(KEY_TWO))   speedMultiplier = 2.0f;
+        if (IsKeyPressed(KEY_THREE)) speedMultiplier = 5.0f;
+        if (IsKeyPressed(KEY_FOUR))  speedMultiplier = 10.0f;
+        if (IsKeyPressed(KEY_MINUS) || IsKeyPressed(KEY_KP_SUBTRACT)) {
+            if (speedMultiplier > 1.0f) speedMultiplier -= 1.0f;
+            else if (speedMultiplier > 0.5f) speedMultiplier = 0.5f;
+            else if (speedMultiplier > 0.25f) speedMultiplier = 0.25f;
+        }
+        if (IsKeyPressed(KEY_EQUAL) || IsKeyPressed(KEY_KP_ADD)) {
+            if (speedMultiplier < 0.5f) speedMultiplier = 0.5f;
+            else if (speedMultiplier < 1.0f) speedMultiplier = 1.0f;
+            else if (speedMultiplier < 10.0f) speedMultiplier += 1.0f;
+        }
 
-        // Step simulation logic
-        sim.update();
+        // Step simulation logic with variable speed control
+        if (sim.running) {
+            simAccumulator += speedMultiplier;
+            while (simAccumulator >= 1.0f) {
+                sim.update();
+                simAccumulator -= 1.0f;
+            }
+        }
 
         // Refresh island terrain texture
         sim.renderToRGBA(rgbaBuffer.data());
@@ -168,18 +171,18 @@ int main() {
         // Draw rabbits
         for (const auto& k : sim.Ktab) {
             if (texKrolik.id != 0) {
-                DrawTexture(texKrolik, k.x - 2 + 8, k.y - 2 + 8, WHITE);
+                DrawTexture(texKrolik, (int)k.x - 2 + 8, (int)k.y - 2 + 8, WHITE);
             } else {
-                DrawRectangle(k.x - 1 + 8, k.y - 1 + 8, 3, 3, WHITE);
+                DrawRectangle((int)k.x - 1 + 8, (int)k.y - 1 + 8, 3, 3, WHITE);
             }
         }
 
         // Draw foxes
         for (const auto& l : sim.Ltab) {
             if (texLis.id != 0) {
-                DrawTexture(texLis, l.x - 2 + 8, l.y - 2 + 8, WHITE);
+                DrawTexture(texLis, (int)l.x - 2 + 8, (int)l.y - 2 + 8, WHITE);
             } else {
-                DrawRectangle(l.x - 2 + 8, l.y - 2 + 8, 4, 4, RED);
+                DrawRectangle((int)l.x - 2 + 8, (int)l.y - 2 + 8, 4, 4, RED);
             }
         }
 
@@ -188,16 +191,16 @@ int main() {
             if (sim.activeInformerTab == 4 && sim.selectedKrolikIdx >= 0 && sim.selectedKrolikIdx < (int)sim.Ktab.size()) {
                 const auto& selK = sim.Ktab[sim.selectedKrolikIdx];
                 if (texWybrany.id != 0) {
-                    DrawTexture(texWybrany, selK.x - 3 + 8, selK.y - 3 + 8, WHITE);
+                    DrawTexture(texWybrany, (int)selK.x - 3 + 8, (int)selK.y - 3 + 8, WHITE);
                 } else {
-                    DrawRectangleLines(selK.x - 4 + 8, selK.y - 4 + 8, 9, 9, YELLOW);
+                    DrawRectangleLines((int)selK.x - 4 + 8, (int)selK.y - 4 + 8, 9, 9, YELLOW);
                 }
             } else if (sim.activeInformerTab == 5 && sim.selectedLisIdx >= 0 && sim.selectedLisIdx < (int)sim.Ltab.size()) {
                 const auto& selL = sim.Ltab[sim.selectedLisIdx];
                 if (texWybrany.id != 0) {
-                    DrawTexture(texWybrany, selL.x - 3 + 8, selL.y - 3 + 8, WHITE);
+                    DrawTexture(texWybrany, (int)selL.x - 3 + 8, (int)selL.y - 3 + 8, WHITE);
                 } else {
-                    DrawRectangleLines(selL.x - 4 + 8, selL.y - 4 + 8, 9, 9, YELLOW);
+                    DrawRectangleLines((int)selL.x - 4 + 8, (int)selL.y - 4 + 8, 9, 9, YELLOW);
                 }
             }
         }
@@ -320,13 +323,11 @@ int main() {
                 DrawLabel(startX + 8.0f, baseY + 172.0f, "Lower vegetation rate = faster\ngrass growth across the island.", 10, CLR_TEXT);
             }
             else if (sim.activeInformerTab == 1) { // Rabbits
-                // Spawner section directly accessible
                 DrawUpDownRow(startX, baseY + 0.0f, rowW, "Spawn Count", sim.upDownIleK, 1, 999, 10);
                 if (DrawButton({ startX + 8.0f, baseY + 23.0f, rowW - 16.0f, 22.0f }, "+ Spawn Rabbits Now")) {
                     sim.generujKroliki(sim.upDownIleK);
                 }
 
-                // Genetic / metabolic parameters
                 bool ch = false;
                 ch |= DrawUpDownRow(startX, baseY +  50.0f, rowW, "Speed (0.1x)", sim.vkVal, 1, 50, 1, "0.1x");
                 ch |= DrawUpDownRow(startX, baseY +  71.0f, rowW, "Metabolism", sim.metaKVal, 1, 50);
@@ -343,13 +344,11 @@ int main() {
                 }
             }
             else if (sim.activeInformerTab == 2) { // Foxes
-                // Spawner section directly accessible
                 DrawUpDownRow(startX, baseY + 0.0f, rowW, "Spawn Count", sim.upDownIleL, 1, 999, 5);
                 if (DrawButton({ startX + 8.0f, baseY + 23.0f, rowW - 16.0f, 22.0f }, "+ Spawn Foxes Now")) {
                     sim.generujLisy(sim.upDownIleL);
                 }
 
-                // Genetic / metabolic parameters
                 bool ch = false;
                 ch |= DrawUpDownRow(startX, baseY +  50.0f, rowW, "Speed (0.1x)", sim.vlVal, 1, 50, 1, "0.1x");
                 ch |= DrawUpDownRow(startX, baseY +  71.0f, rowW, "Metabolism", sim.metaLVal, 1, 50);
@@ -412,7 +411,6 @@ int main() {
                     DrawReadOnlyEditRow(startX, baseY + 120.0f, rowW, "Gestation", bCiaz);
                     DrawReadOnlyEditRow(startX, baseY + 144.0f, rowW, "Body Size", bWielk);
 
-                    // Individual control buttons
                     if (DrawButton({ startX + 8.0f, baseY + 172.0f, rowW - 16.0f, 24.0f }, "Feed Rabbit (Max Energy)")) {
                         k.zoladek = (float)sim.zoladekKVal;
                     }
@@ -455,7 +453,6 @@ int main() {
                     DrawReadOnlyEditRow(startX, baseY + 120.0f, rowW, "Gestation", bCiaz);
                     DrawReadOnlyEditRow(startX, baseY + 144.0f, rowW, "Body Size", bWielk);
 
-                    // Individual control buttons
                     if (DrawButton({ startX + 8.0f, baseY + 172.0f, rowW - 16.0f, 24.0f }, "Feed Fox (Max Energy)")) {
                         l.zoladek = (float)sim.zoladekLVal;
                     }
@@ -514,35 +511,112 @@ int main() {
         }
 
         // -------------------------------------------------------------------------
-        // 3. Bottom Navigation and Screen Control Panel
+        // 3. Right Bottom Navigation and Screen Control Panel
         // -------------------------------------------------------------------------
-        Rectangle bottomPanelRect = { panelX, panelY + panelH + 8.0f, panelW, 110.0f };
+        Rectangle bottomPanelRect = { panelX, panelY + panelH + 6.0f, panelW, 104.0f };
         DrawGroupBox(bottomPanelRect, "Navigation / Screen");
 
         if (sim.poziom == 0) {
-            // In Phase 1 (Island Generator)
-            DrawButton({ panelX + 8.0f, panelY + panelH + 24.0f, 68.0f, 40.0f }, "<< Setup", false);
+            DrawButton({ panelX + 8.0f, panelY + panelH + 20.0f, 68.0f, 38.0f }, "<< Setup", false);
 
-            if (DrawButton({ panelX + 82.0f, panelY + panelH + 24.0f, panelW - 90.0f, 40.0f }, "Start Simulation >>", true, CLR_TEXT)) {
+            if (DrawButton({ panelX + 82.0f, panelY + panelH + 20.0f, panelW - 90.0f, 38.0f }, "Start Simulation >>", true, CLR_TEXT)) {
                 sim.butOkClick();
             }
         } else {
-            // In Phase 2 (Ecosystem Management & Simulation)
-            if (DrawButton({ panelX + 8.0f, panelY + panelH + 24.0f, 68.0f, 40.0f }, "<< Island", true)) {
+            if (DrawButton({ panelX + 8.0f, panelY + panelH + 20.0f, 68.0f, 38.0f }, "<< Island", true)) {
                 sim.butPowrotClick();
             }
 
             const char* pauseLabel = sim.running ? "Pause (Space)" : "Resume (Space)";
             Color pauseCol = sim.running ? CLR_TEXT : RED;
-            if (DrawButton({ panelX + 82.0f, panelY + panelH + 24.0f, panelW - 90.0f, 40.0f }, pauseLabel, true, pauseCol)) {
+            if (DrawButton({ panelX + 82.0f, panelY + panelH + 20.0f, panelW - 90.0f, 38.0f }, pauseLabel, true, pauseCol)) {
                 sim.running = !sim.running;
             }
         }
 
         // Fullscreen toggle button
         const char* fsText = IsWindowFullscreen() ? "Windowed Mode (F11)" : "Fullscreen (F11)";
-        if (DrawButton({ panelX + 8.0f, panelY + panelH + 68.0f, panelW - 16.0f, 34.0f }, fsText)) {
+        if (DrawButton({ panelX + 8.0f, panelY + panelH + 62.0f, panelW - 16.0f, 32.0f }, fsText)) {
             ToggleFullscreen();
+        }
+
+        // -------------------------------------------------------------------------
+        // 4. Bottom Full-Width Status Bar & Speed Control
+        // -------------------------------------------------------------------------
+        Simulation::IslandStats stats = sim.getIslandStats();
+
+        // Status Panel 1: Alive Rabbits
+        char statK[32];
+        snprintf(statK, sizeof(statK), "Rabbits: %zu", sim.Ktab.size());
+        Rectangle statBoxK = { 6.0f, 414.0f, 106.0f, 20.0f };
+        DrawSunkenBox(statBoxK, CLR_BG);
+        DrawTextBold(statK, statBoxK.x + 5.0f, statBoxK.y + 5.0f, 10, CLR_NAVY);
+
+        // Status Panel 2: Alive Foxes
+        char statL[32];
+        snprintf(statL, sizeof(statL), "Foxes: %zu", sim.Ltab.size());
+        Rectangle statBoxL = { 116.0f, 414.0f, 96.0f, 20.0f };
+        DrawSunkenBox(statBoxL, CLR_BG);
+        DrawTextBold(statL, statBoxL.x + 5.0f, statBoxL.y + 5.0f, 10, RED);
+
+        // Status Panel 3: Grass Biomass / Coverage
+        char statGrass[48];
+        snprintf(statGrass, sizeof(statGrass), "Grass: %.1f%%", stats.grassPercent);
+        Rectangle statBoxG = { 216.0f, 414.0f, 126.0f, 20.0f };
+        DrawSunkenBox(statBoxG, CLR_BG);
+        DrawTextBold(statGrass, statBoxG.x + 5.0f, statBoxG.y + 5.0f, 10, DARKGREEN);
+
+        // Status Panel 4: Simulation Tick
+        char statTick[32];
+        snprintf(statTick, sizeof(statTick), "Tick: %d", sim.plus);
+        Rectangle statBoxT = { 346.0f, 414.0f, 100.0f, 20.0f };
+        DrawSunkenBox(statBoxT, CLR_BG);
+        DrawTextBold(statTick, statBoxT.x + 5.0f, statBoxT.y + 5.0f, 10, CLR_TEXT);
+
+        // Status Panel 5: Speed Slider / Control Bar
+        Rectangle speedPanel = { 450.0f, 414.0f, 294.0f, 20.0f };
+        DrawSunkenBox(speedPanel, CLR_BG);
+
+        DrawTextBold("Speed:", 455.0f, 419.0f, 10, CLR_NAVY);
+
+        // Slower button [-]
+        if (DrawButton({ 496.0f, 415.0f, 16.0f, 18.0f }, "-")) {
+            if (speedMultiplier > 1.0f) speedMultiplier -= 1.0f;
+            else if (speedMultiplier > 0.5f) speedMultiplier = 0.5f;
+            else if (speedMultiplier > 0.25f) speedMultiplier = 0.25f;
+        }
+
+        // Current speed readout
+        char spdBuf[16];
+        if (speedMultiplier < 1.0f) snprintf(spdBuf, sizeof(spdBuf), "%.2fx", speedMultiplier);
+        else snprintf(spdBuf, sizeof(spdBuf), "%.0fx", speedMultiplier);
+
+        Rectangle spdValBox = { 514.0f, 415.0f, 38.0f, 18.0f };
+        DrawSunkenBox(spdValBox, CLR_YELLOW_BG);
+        DrawTextBold(spdBuf, spdValBox.x + 4.0f, spdValBox.y + 4.0f, 10, CLR_TEXT);
+
+        // Faster button [+]
+        if (DrawButton({ 554.0f, 415.0f, 16.0f, 18.0f }, "+")) {
+            if (speedMultiplier < 0.5f) speedMultiplier = 0.5f;
+            else if (speedMultiplier < 1.0f) speedMultiplier = 1.0f;
+            else if (speedMultiplier < 10.0f) speedMultiplier += 1.0f;
+        }
+
+        // Preset speed buttons
+        if (DrawButton({ 574.0f, 415.0f, 32.0f, 18.0f }, "0.5x", true, (speedMultiplier == 0.5f) ? RED : CLR_TEXT)) {
+            speedMultiplier = 0.5f;
+        }
+        if (DrawButton({ 608.0f, 415.0f, 26.0f, 18.0f }, "1x", true, (speedMultiplier == 1.0f) ? RED : CLR_TEXT)) {
+            speedMultiplier = 1.0f;
+        }
+        if (DrawButton({ 636.0f, 415.0f, 26.0f, 18.0f }, "2x", true, (speedMultiplier == 2.0f) ? RED : CLR_TEXT)) {
+            speedMultiplier = 2.0f;
+        }
+        if (DrawButton({ 664.0f, 415.0f, 26.0f, 18.0f }, "5x", true, (speedMultiplier == 5.0f) ? RED : CLR_TEXT)) {
+            speedMultiplier = 5.0f;
+        }
+        if (DrawButton({ 692.0f, 415.0f, 30.0f, 18.0f }, "10x", true, (speedMultiplier == 10.0f) ? RED : CLR_TEXT)) {
+            speedMultiplier = 10.0f;
         }
 
         EndTextureMode();
@@ -567,7 +641,6 @@ int main() {
     if (texKrolik.id != 0)  UnloadTexture(texKrolik);
     if (texLis.id != 0)     UnloadTexture(texLis);
     if (texWybrany.id != 0) UnloadTexture(texWybrany);
-    if (uiFont.texture.id != 0) UnloadFont(uiFont);
     UnloadRenderTexture(target);
 
     CloseWindow();

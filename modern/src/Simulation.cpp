@@ -632,3 +632,25 @@ void Simulation::renderToRGBA(uint8_t* rgbaBuffer) {
         }
     }
 }
+
+Simulation::IslandStats Simulation::getIslandStats() const {
+    IslandStats stats;
+    for (int x = 0; x < SZER; x += 2) {
+        for (int y = 0; y < WYS; y += 2) {
+            int a = wyspa[x][y];
+            if (a >= SLONA) {
+                stats.landCells++;
+                int tr = trawa[x][y];
+                if (tr > 0) {
+                    stats.greenCells++;
+                    stats.totalGrass += tr;
+                    stats.maxGrass += 255;
+                }
+            }
+        }
+    }
+    if (stats.maxGrass > 0) {
+        stats.grassPercent = (float)stats.totalGrass / (float)stats.maxGrass * 100.0f;
+    }
+    return stats;
+}

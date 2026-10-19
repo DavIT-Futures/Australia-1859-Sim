@@ -19,8 +19,8 @@ namespace ClassicUI {
     void SetVirtualMouse(Vector2 mouse);
     Vector2 GetVirtualMouse();
 
-    void SetUIFont(Font font);
-    Font GetUIFont();
+    void DrawTextBold(const char* text, float x, float y, int size, Color color);
+    int  MeasureTextBold(const char* text, int size);
 
     void DrawSunkenBox(Rectangle rect, Color bgColor = CLR_EDIT_BG);
     void DrawRaisedBox(Rectangle rect);
@@ -31,7 +31,7 @@ namespace ClassicUI {
     bool DrawUpDownRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step = 1, const char* prefix = nullptr);
     void DrawReadOnlyEdit(Rectangle rect, const char* text, Color bgColor = CLR_EDIT_BG, Color textColor = CLR_TEXT);
     void DrawReadOnlyEditRow(float x, float y, float totalW, const char* label, const char* text);
-    void DrawLabel(float x, float y, const char* text, float fontSize = 11.0f, Color color = CLR_TEXT);
+    void DrawLabel(float x, float y, const char* text, int fontSize = 10, Color color = CLR_TEXT);
 
 } // namespace ClassicUI
 
