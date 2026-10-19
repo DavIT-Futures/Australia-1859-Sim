@@ -48,7 +48,14 @@ $RECYCLE.BIN/
 .vscode/
 *.user
 
-# Executables: ignore build outputs by default, but preserve standalone release binary
+# CMake and build outputs
+build/
+modern/build/
+CMakeFiles/
+CMakeCache.txt
+
+# Executables: ignore build outputs by default, but preserve standalone release binaries
 *.exe
 !wyspa.exe
 !bin/*.exe
+!modern/bin/*.exe

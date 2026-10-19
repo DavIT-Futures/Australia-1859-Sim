@@ -88,54 +88,76 @@ Aplikacja modeluje interakcje w zamkniętym ekosystemie wyspy pomiędzy **rośli
 ## 📁 Struktura Repozytorium
 
 ```
-Wyspa/
-├── ver16/                 # Ostateczna, najbardziej dopracowana wersja projektu (BCB6)
+Australia-1859-Sim/
+├── modern/                # ✨ NOWOCZESNY PORT C++20 + RAYLIB (Visual Studio 2026 / CMake)
+│   ├── CMakeLists.txt     # Automatyczne pobieranie Raylib i konfiguracja projektu
+│   ├── src/               # Przeniesiony, w 100% wierny kod algorytmiczny
+│   │   ├── main.cpp       # Nowoczesne okno 60 FPS, pętla gry i interfejs HUD
+│   │   ├── Simulation.cpp # Generator wyspy, BFS fal, wegetacja, renderer RGBA
+│   │   ├── Kroliki.cpp    # Klasa królików, stado, metabolizm, rozród, ucieczka
+│   │   ├── Lisy.cpp       # Klasa lisów, polowanie, stado, zachowanie
+│   │   └── *.h            # Klasy bazowe, kolejka FIFO BFS
+│   ├── assets/            # Oryginalne ikony i sprite'y zwierząt
+│   └── bin/               # Gotowy, skompilowany plik Australia1859Sim.exe (x64)
+├── ver16/                 # Ostateczna archiwalna wersja projektu (Borland C++Builder 6)
 │   ├── wyspa.bpr          # Plik projektu Borland C++Builder 6
 │   ├── wyspa.cpp          # Punkt wejścia WinMain
-│   ├── glowny.cpp / .h    # Główne okno aplikacji, pętla zdarzeń i generator wyspy
+│   ├── glowny.cpp / .h    # Główne okno aplikacji VCL
 │   ├── glowny.dfm         # Definicja formularza VCL
-│   ├── Kroliki.cpp / .h   # Zarządca stada królików
-│   ├── krolik.cpp / .h    # Klasa pojedynczego królika
-│   ├── Lisy.cpp / .h      # Zarządca populacji lisów
-│   ├── Lis.cpp / .h       # Klasa pojedynczego lisa
-│   ├── zwierze.cpp / .h   # Klasa bazowa zwierzęcia (dziedziczenie OOP)
-│   ├── kolejka.cpp / .h   # Kolejka priorytetowa / dyspozytor zdarzeń
-│   ├── PlodK.cpp / .h     # Obsługa rozrodu królików
-│   ├── PlodL.cpp / .h     # Obsługa rozrodu lisów
-│   ├── nic.h              # Pomocnicze stałe i definicje
-│   ├── wyspa.res          # Zasoby binarne Win32
-│   ├── *.bmp              # Ikony i sprite'y zwierząt (lis, królik, kursor)
-│   └── wyspa.exe          # Gotowy, skompilowany plik wykonywalny Win32
+│   ├── Kroliki.cpp / .h   # Oryginalne algorytmy królików
+│   ├── Lisy.cpp / .h      # Oryginalne algorytmy lisów
+│   └── wyspa.exe          # Oryginalny plik wykonywalny Win32 z 2005 roku
 ├── ver15/                 # Wersja pośrednia (etap rozwoju projektu)
 ├── ver14/                 # Wczesna wersja prototypowa
 ├── docs/                  # Dokumentacja i materiały archiwalne
 │   ├── wyspa.doc          # Oryginalna dokumentacja projektowa PWr (2005)
 │   └── screenshots/       # Zrzuty ekranu w formacie PNG
 ├── plany.txt              # Oryginalne notatki autora z prac nad projektem
-├── .gitignore             # Ignorowanie plików tymczasowych Borland (.obj, .tds, .~*)
+├── .gitignore             # Wykluczenie plików tymczasowych Borland i CMake
 └── README.md              # Niniejsza dokumentacja
 ```
 
 ---
 
-## 🚀 Uruchomienie Programu / Running the Application
+## ⚡ Nowoczesny Port C++20 (Raylib)
 
-Skompilowana aplikacja znajduje się w folderze `ver16/wyspa.exe`.
+Projekt posiada w pełni funkcjonalny, nowoczesny port w folderze `modern/`, który zachowuje **100% oryginalnych algorytmów z 2005 roku**:
 
-* Jest to 32-bitowy plik wykonywalny Win32 ze **statycznie zlinkowaną biblioteką VCL (Visual Component Library)**.
-* **Nie wymaga żadnych zewnętrznych bibliotek DLL ani instalatorów.**
-* **Działa natywnie na współczesnych systemach Windows (Windows 10, Windows 11 64-bit)** pod warstwą WOW64.
-* Wystarczy dwukrotnie kliknąć `ver16/wyspa.exe`, aby uruchomić symulator.
+### 🎮 Uruchomienie portu (Gotowy plik `.exe`)
+Skompilowany, w pełni niezależny 64-bitowy plik wykonywalny znajduje się w:  
+👉 **`modern/bin/Australia1859Sim.exe`**  
+Wystarczy go uruchomić – działa natywnie na współczesnym Windowsie bez instalowania żadnych bibliotek!
+
+### ⌨️ Sterowanie i skróty klawiszowe w nowoczesnym porcie:
+* **`[SPACJA]`** – Wstrzymanie / wznowienie symulacji (Pause / Resume)
+* **`[1] / [2] / [3] / [4]`** – Zmiana prędkości symulacji (1x, 2x, 5x, 10x) lub klawisze `+` / `-`
+* **`[G]`** – Wygenerowanie nowej wyspy (algorytm sinusoidalny)
+* **`[B]`** – Wycięcie nieregularnych zatok brzegowych (algorytm rombowy)
+* **`[S]`** – Wygładzenie linii brzegowej (automaty komórkowe / erozja i dylatacja)
+* **`[Z]`** – Dodanie ziarna i szumu terenu
+* **`[K]`** – Wpuszczenie stada 50 królików
+* **`[L]`** – Wpuszczenie stada 10 lisów
+* **`[R]`** – Reset trawy do stanu początkowego
+* **`[M]`** – Maksymalny rozrost trawy na całej wyspie
+* **`[C]`** – Usunięcie wszystkich zwierząt z wyspy
+* **`Kliknięcie myszką na zwierzęciu`** – Wybór i podgląd parametrów życiowych osobnika w panelu inspektora (wiek, energia, płeć, ciąża, status zachowania).
+
+### 🛠️ Kompilacja portu ze źródeł (Visual Studio 2026 / CMake):
+```bash
+cd modern
+cmake -B build
+cmake --build build --config Release
+```
+CMake automatycznie pobierze i skompiluje bibliotekę Raylib – nie trzeba nic instalować ręcznie!
 
 ---
 
-## 🛠️ Kompilacja ze Źródeł / Building from Source
+## 🏛️ Wersja Klasyczna (Borland C++Builder 6 / 2005)
 
-Kod źródłowy został napisany z wykorzystaniem biblioteki **VCL** dedykowanej dla środowiska **Borland C++Builder 6.0**:
-
-1. Otwórz projekt `ver16/wyspa.bpr` w środowisku **Borland C++Builder 6.0** (lub kompatybilnym Embarcadero RAD Studio / C++Builder z obsługą VCL).
-2. Wybierz konfigurację `Release` lub `Debug`.
-3. Uruchom kompilację skrótem `Project -> Make` (`Ctrl+F9`) lub `Project -> Build` (`Shift+F9`).
+Oryginalna, archiwalna aplikacja znajduje się w folderze `ver16/wyspa.exe`:
+* Jest to 32-bitowy plik wykonywalny Win32 ze statycznie zlinkowaną biblioteką VCL.
+* Działa natywnie na współczesnych systemach Windows (Windows 10, Windows 11 64-bit) pod warstwą WOW64.
+* Do rekompilacji źródeł z folderu `ver16/` wymagane jest środowisko **Borland C++Builder 6.0** (lub Embarcadero C++Builder z obsługą VCL).
 
 ---
 
