@@ -25,7 +25,10 @@ Simulation::Simulation() {
     krol = new Kroliki(trawa, SZER, WYS, &Ktab, &Ltab);
     lis = new Lisy(trawa, SZER, WYS, &Ktab, &Ltab);
 
-    // Domyślne fale słone
+    applyKrolikParams();
+    applyLisParams();
+
+    // Domyślne fale morskie
     for (int n = 0; n < SLONA / 2; n++) {
         fala[n].r = (uint8_t)(64 - n);
         fala[n].g = (uint8_t)(160 - 2 * n);
@@ -44,10 +47,8 @@ Simulation::Simulation() {
         falaS[n].b = 255;
     }
 
+    // Start w fazie Generator "Bóg" (poziom 0)
     generujWyspe(amplitude);
-    zatwierdzWyspe();
-    generujKroliki(200);
-    generujLisy(20);
 }
 
 Simulation::~Simulation() {
@@ -61,10 +62,67 @@ Simulation::~Simulation() {
     delete[] trawa;
 }
 
+void Simulation::applyKrolikParams() {
+    krol->vk = 0.1f * vkVal;
+    krol->metabolizm = (float)metaKVal;
+    krol->kes = (float)kesKVal;
+    krol->pojemnoscZ = (float)zoladekKVal;
+    krol->glod = (float)glodKVal;
+    krol->starving = (float)starvingKVal;
+    krol->pole_widz = detekcjaKVal;
+    krol->dl_zycia = zycieKVal;
+    krol->wiek_dojrz = dojrzaloscKVal;
+    krol->dl_ciazy = ciazaKVal;
+}
+
+void Simulation::applyLisParams() {
+    lis->vl = 0.1f * vlVal;
+    lis->metabolizm = (float)metaLVal;
+    lis->kes = (float)wodzLVal;
+    lis->pojemnoscZ = (float)zoladekLVal;
+    lis->glod = (float)glodLVal;
+    lis->dl_zycia = zycieLVal;
+    lis->wiek_dojrz = dojrzaloscLVal;
+    lis->dl_ciazy = ciazaLVal;
+}
+
+void Simulation::butOkClick() {
+    if (poziom == 0) {
+        zatwierdzWyspe();
+        krol->generuj(upDownIleK, upDownStadaK, upDownRozpK);
+        poziom = 1;
+    } else if (poziom == 1) {
+        lis->generuj(upDownIleL, upDownStadaL, upDownRozpL);
+        poziom = 2;
+    } else if (poziom == 2) {
+        poziom = 3;
+        running = true;
+    }
+}
+
+void Simulation::butPowrotClick() {
+    if (poziom == 1) {
+        for (int x = 0; x < SZER; x++) {
+            for (int y = 0; y < WYS; y++) {
+                if (wyspa[x][y] >= 512) wyspa[x][y] = 0;
+                trawa[x][y] = 0;
+            }
+        }
+        krol->czysc();
+        fale();
+        poziom = 0;
+    } else if (poziom == 2) {
+        lis->czysc();
+        poziom = 1;
+    } else if (poziom == 3) {
+        poziom = 2;
+    }
+}
+
 void Simulation::pallad() {
     int pas = SLONA;
 
-    // Plaża (złoto-żółty)
+    // Plaża
     for (int n = 0; n < upDownPlaza; n++) {
         pal[pas + n].r = 255;
         pal[pas + n].g = 224;
@@ -80,7 +138,7 @@ void Simulation::pallad() {
     }
     pas += 32;
 
-    // Trawa (zielony)
+    // Trawa
     for (int n = 0; n < upDownTrawa; n++) {
         pal[pas + n].r = 0;
         pal[pas + n].g = 192;
@@ -96,7 +154,7 @@ void Simulation::pallad() {
     }
     pas += 32;
 
-    // Śnieg (biały)
+    // Śnieg
     for (int n = 0; n < upDownSnieg; n++) {
         pal[pas + n].r = 255;
         pal[pas + n].g = 255;
@@ -104,7 +162,7 @@ void Simulation::pallad() {
     }
     pas += upDownSnieg;
 
-    // Śnieg / ziemia skały
+    // Śnieg / skały
     for (int n = 0; n < 32; n++) {
         uint8_t val = (uint8_t)(255 - n * 8);
         pal[pas + n].r = val;
@@ -113,7 +171,7 @@ void Simulation::pallad() {
     }
     pas += 32;
 
-    // Ziemia / skały
+    // Ziemia
     for (int n = 0; n < 8; n++) {
         pal[pas + n].r = 0;
         pal[pas + n].g = 0;
@@ -442,9 +500,9 @@ void Simulation::resetTrawy() {
                 else if (a > max - 32) trawa[x][y] = 8 * (max - a);
                 else trawa[x][y] = 255;
             } else if (a <= SLONA) {
-                trawa[x][y] = -255; // Woda - zabroniona
+                trawa[x][y] = -255;
             } else if (a >= max) {
-                if (a >= max2) trawa[x][y] = max - a; // Góra/wulkan
+                if (a >= max2) trawa[x][y] = max - a;
                 else trawa[x][y] = 0;
             } else {
                 trawa[x][y] = 0;
@@ -495,31 +553,37 @@ void Simulation::zatwierdzWyspe() {
 }
 
 void Simulation::generujKroliki(int ile) {
-    krol->generuj(ile, 8, 8);
+    krol->generuj(ile, upDownStadaK, upDownRozpK);
 }
 
 void Simulation::generujLisy(int ile) {
-    lis->generuj(ile, 8, 8);
+    lis->generuj(ile, upDownStadaL, upDownRozpL);
 }
 
 void Simulation::update() {
     if (!running) return;
 
     for (int step = 0; step < simSpeed; step++) {
-        // Trawa rośnie losowo w zależności od wegetacji
-        for (int x = 0; x < SZER; x++) {
-            for (int y = 0; y < WYS; y++) {
-                if (trawa[x][y] > 0 && trawa[x][y] < 255) {
-                    if (random(wegetacja) == 0) {
-                        trawa[x][y]++;
+        if (poziom >= 1) {
+            // Trawa rośnie losowo w zależności od wegetacji
+            for (int x = 0; x < SZER; x++) {
+                for (int y = 0; y < WYS; y++) {
+                    if (trawa[x][y] > 0 && trawa[x][y] < 255) {
+                        if (random(wegetacja) == 0) {
+                            trawa[x][y]++;
+                        }
                     }
                 }
             }
+
+            // Ruch królików
+            krol->rusz();
         }
 
-        // Ruch zwierząt
-        krol->rusz();
-        lis->rusz();
+        if (poziom >= 2) {
+            // Ruch lisów
+            lis->rusz();
+        }
 
         plus++;
     }

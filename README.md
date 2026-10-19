@@ -119,9 +119,36 @@ Australia-1859-Sim/
 
 ---
 
-## ⚡ Nowoczesny Port C++20 (Raylib)
+## ⚡ Nowoczesny Port C++20 (Raylib + Autentyczny Interfejs Borland GUI)
 
-Projekt posiada w pełni funkcjonalny, nowoczesny port w folderze `modern/`, który zachowuje **100% oryginalnych algorytmów z 2005 roku**:
+Projekt posiada w pełni funkcjonalny, nowoczesny port w folderze `modern/`, który zachowuje **100% oryginalnych algorytmów z 2005 roku** oraz **przywraca wierny, klasyczny interfejs graficzny Borland C++Builder 6 (VCL)**:
+
+### 🖥️ Wiernie Przywrócony Interfejs Borland C++Builder 6:
+* **Etapowy Kreator Świata (Wizard Flow):**
+  * **Etap 0: Generator „Bóg ver. 1.3.12”** – z 4 zakładkami:
+    * `Kształt` – dobór amplitudy i generowanie wstępnego zarysu lądu,
+    * `Zatoki` – rzeźbienie linii brzegowej (zatoki głębokie oraz zatoki na plaży),
+    * `Korekta` – powiększanie (`+`), pomniejszanie (`-`) lądu oraz wygładzanie brzegów automatami komórkowymi,
+    * `Wnętrze` – proporcje plaży, trawy, śniegu oraz dodawanie ziarnistości terenu.
+  * **Etap 1: Generator „Króliczek ver. 1.3.1”** – konfiguracja liczebności, stad i rozproszenia populacji królików.
+  * **Etap 2: Generator „Lisek ver. 1.3.1”** – konfiguracja liczebności, stad i rozproszenia populacji lisów.
+  * **Etap 3: Informer „UB ver. 1.3.6”** – aktywna symulacja ekosystemu z 7 zakładkami:
+    * `Trawka` – kontrola wegetacji, zazielenianie na maksa, koszenie i reset trawy,
+    * `Króliki` – kontrola genetyki i metabolizmu (prędkość, metabolizm, kęs, żołądek, głód, starvation, detekcja lisów, długość życia, dojrzałość, ciąża),
+    * `Lisy` – parametry drapieżników (prędkość, metabolizm, wartość odżywcza królika, żołądek, głód, długość życia, ciąża),
+    * `Stat` – statystyki na żywo: liczebność, zgony z głodu, ze starości oraz króliki upolowane,
+    * `Mój królik` / `Mój lis` – szczegółowy inspektor wybranego osobnika (status, płeć, wiek/max, najedzenie, ciąża, wielkość),
+    * `Ewolucja` – średnie parametry populacji mierzone w czasie rzeczywistym.
+* **Klasyczne kontrolki VCL:**
+  * Zakładki (TPageControl),
+  * Ramki 3D (TGroupBox, TBevel, Sunken/Raised boxes),
+  * Pola numeryczne TUpDown ze strzałkami góra/dół (spinboxy),
+  * Pola tekstowe TEdit o żółtym tle z purpurowym/czarnym fontem,
+  * Przyciski nawigacyjne `<< Powrót` oraz `OK >>` (w etapie symulacji działający jako pauza/wznowienie).
+* **🖥️ Opcja Pełnego Ekranu (Fullscreen):**
+  * Przełączanie w dowolnym momencie dedykowanym przyciskiem **`[Pełny ekran (F11)]`** na dole panelu lub klawiszem **`F11`**,
+  * Wirtualna rozdzielczość ze skalowaniem letterbox zachowującym idealne proporcje bez rozciągania obrazu,
+  * Wygładzanie i precyzyjne mapowanie kursora myszy na wirtualne płótno w każdym trybie.
 
 ### 🎮 Uruchomienie portu (Gotowy plik `.exe`)
 Skompilowany, w pełni niezależny 64-bitowy plik wykonywalny znajduje się w:  
@@ -129,18 +156,11 @@ Skompilowany, w pełni niezależny 64-bitowy plik wykonywalny znajduje się w:
 Wystarczy go uruchomić – działa natywnie na współczesnym Windowsie bez instalowania żadnych bibliotek!
 
 ### ⌨️ Sterowanie i skróty klawiszowe w nowoczesnym porcie:
-* **`[SPACJA]`** – Wstrzymanie / wznowienie symulacji (Pause / Resume)
-* **`[1] / [2] / [3] / [4]`** – Zmiana prędkości symulacji (1x, 2x, 5x, 10x) lub klawisze `+` / `-`
-* **`[G]`** – Wygenerowanie nowej wyspy (algorytm sinusoidalny)
-* **`[B]`** – Wycięcie nieregularnych zatok brzegowych (algorytm rombowy)
-* **`[S]`** – Wygładzenie linii brzegowej (automaty komórkowe / erozja i dylatacja)
-* **`[Z]`** – Dodanie ziarna i szumu terenu
-* **`[K]`** – Wpuszczenie stada 50 królików
-* **`[L]`** – Wpuszczenie stada 10 lisów
-* **`[R]`** – Reset trawy do stanu początkowego
-* **`[M]`** – Maksymalny rozrost trawy na całej wyspie
-* **`[C]`** – Usunięcie wszystkich zwierząt z wyspy
-* **`Kliknięcie myszką na zwierzęciu`** – Wybór i podgląd parametrów życiowych osobnika w panelu inspektora (wiek, energia, płeć, ciąża, status zachowania).
+* **`[F11]`** / **Przycisk na dole panelu** – Przełączenie trybu pełnoekranowego (Fullscreen / Windowed)
+* **`[SPACJA]`** – Przejście do następnego etapu w kreatorze lub Wstrzymanie / Wznowienie w symulacji
+* **`[1] / [2] / [3] / [4]`** – Szybka zmiana tempa symulacji (1x, 2x, 5x, 10x)
+* **`Kliknięcie myszką na mapie`** – Bezpośrednie zaznaczenie najbliższego królika lub lisa i przejście do jego karty w inspektorze (`Mój królik` / `Mój lis`).
+* **`Klikanie zakładek i strzałek UpDown`** – Płynna zmiana parametrów na żywo.
 
 ### 🛠️ Kompilacja portu ze źródeł (Visual Studio 2026 / CMake):
 ```bash

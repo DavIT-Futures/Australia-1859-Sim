@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(raylib)
 
 add_executable(Australia1859Sim
     src/main.cpp
+    src/ClassicUI.cpp
     src/Kroliki.cpp
     src/Lisy.cpp
     src/Simulation.cpp
