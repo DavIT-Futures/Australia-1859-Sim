@@ -1,10 +1,40 @@
 #include "ClassicUI.h"
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 
 namespace ClassicUI {
 
 static Vector2 s_virtualMouse = { 0, 0 };
+static float   s_scale = 1.7f;
+static int     s_baseFontSize = 17;
+static Font    s_fontBold = { 0 };
+
+void Init(float scale, const char* fontPath) {
+    s_scale = scale;
+    s_baseFontSize = (int)roundf(10.0f * scale);
+    if (s_baseFontSize < 10) s_baseFontSize = 10;
+
+    // Load crisp TrueType Bold font (Tahoma Bold or Segoe UI Bold)
+    if (fontPath && FileExists(fontPath)) {
+        s_fontBold = LoadFontEx(fontPath, s_baseFontSize, NULL, 0);
+    } else if (FileExists("assets/tahomabd.ttf")) {
+        s_fontBold = LoadFontEx("assets/tahomabd.ttf", s_baseFontSize, NULL, 0);
+    } else if (FileExists("assets/segoeuib.ttf")) {
+        s_fontBold = LoadFontEx("assets/segoeuib.ttf", s_baseFontSize, NULL, 0);
+    }
+
+    if (s_fontBold.texture.id != 0) {
+        SetTextureFilter(s_fontBold.texture, TEXTURE_FILTER_BILINEAR);
+    }
+}
+
+void Shutdown() {
+    if (s_fontBold.texture.id != 0) {
+        UnloadFont(s_fontBold);
+        s_fontBold = { 0 };
+    }
+}
 
 void SetVirtualMouse(Vector2 mouse) {
     s_virtualMouse = mouse;
@@ -14,13 +44,36 @@ Vector2 GetVirtualMouse() {
     return s_virtualMouse;
 }
 
+float GetScale() {
+    return s_scale;
+}
+
+int GetBaseFontSize() {
+    return s_baseFontSize;
+}
+
 void DrawTextBold(const char* text, float x, float y, int size, Color color) {
-    DrawText(text, (int)x, (int)y, size, color);
-    DrawText(text, (int)x + 1, (int)y, size, color);
+    if (!text || text[0] == '\0') return;
+
+    int actualSize = (size <= 10) ? s_baseFontSize : (int)roundf((float)size * s_scale);
+
+    if (s_fontBold.texture.id != 0) {
+        DrawTextEx(s_fontBold, text, Vector2{ x, y }, (float)actualSize, 1.0f, color);
+    } else {
+        DrawText(text, (int)x, (int)y, actualSize, color);
+        DrawText(text, (int)x + 1, (int)y, actualSize, color);
+    }
 }
 
 int MeasureTextBold(const char* text, int size) {
-    return MeasureText(text, size) + 1;
+    if (!text || text[0] == '\0') return 0;
+    int actualSize = (size <= 10) ? s_baseFontSize : (int)roundf((float)size * s_scale);
+
+    if (s_fontBold.texture.id != 0) {
+        return (int)MeasureTextEx(s_fontBold, text, (float)actualSize, 1.0f).x;
+    } else {
+        return MeasureText(text, actualSize) + 1;
+    }
 }
 
 void DrawSunkenBox(Rectangle rect, Color bgColor) {
@@ -45,14 +98,14 @@ void DrawRaisedBox(Rectangle rect) {
 
 void DrawGroupBox(Rectangle rect, const char* caption) {
     int textWidth = MeasureTextBold(caption, 10);
-    int topY = (int)rect.y + 6;
+    int topY = (int)rect.y + (int)roundf(6.0f * s_scale);
 
     // Etched border (sunken rectangle)
-    DrawLine((int)rect.x, topY, (int)rect.x + 8, topY, CLR_SHADOW);
-    DrawLine((int)rect.x, topY + 1, (int)rect.x + 8, topY + 1, CLR_LIGHT);
+    DrawLine((int)rect.x, topY, (int)(rect.x + 8.0f * s_scale), topY, CLR_SHADOW);
+    DrawLine((int)rect.x, topY + 1, (int)(rect.x + 8.0f * s_scale), topY + 1, CLR_LIGHT);
 
-    DrawLine((int)(rect.x + 14 + textWidth), topY, (int)(rect.x + rect.width - 1), topY, CLR_SHADOW);
-    DrawLine((int)(rect.x + 14 + textWidth), topY + 1, (int)(rect.x + rect.width - 2), topY + 1, CLR_LIGHT);
+    DrawLine((int)(rect.x + 14.0f * s_scale + textWidth), topY, (int)(rect.x + rect.width - 1), topY, CLR_SHADOW);
+    DrawLine((int)(rect.x + 14.0f * s_scale + textWidth), topY + 1, (int)(rect.x + rect.width - 2), topY + 1, CLR_LIGHT);
 
     DrawLine((int)rect.x, topY, (int)rect.x, (int)(rect.y + rect.height - 1), CLR_SHADOW);
     DrawLine((int)rect.x + 1, topY + 1, (int)rect.x + 1, (int)(rect.y + rect.height - 2), CLR_LIGHT);
@@ -63,7 +116,7 @@ void DrawGroupBox(Rectangle rect, const char* caption) {
     DrawLine((int)(rect.x + rect.width - 2), topY, (int)(rect.x + rect.width - 2), (int)(rect.y + rect.height - 1), CLR_SHADOW);
     DrawLine((int)(rect.x + rect.width - 1), topY, (int)(rect.x + rect.width - 1), (int)(rect.y + rect.height), CLR_LIGHT);
 
-    DrawTextBold(caption, rect.x + 10.0f, rect.y - 1.0f, 10, CLR_TEXT);
+    DrawTextBold(caption, rect.x + 10.0f * s_scale, rect.y - 1.0f * s_scale, 10, CLR_TEXT);
 }
 
 int DrawTabs(Rectangle rect, const char* const* tabs, int count, int activeTab) {
@@ -91,7 +144,7 @@ int DrawTabs(Rectangle rect, const char* const* tabs, int count, int activeTab) 
 
         int tw = MeasureTextBold(tabs[i], 10);
         float tx = tabRect.x + (tabWidth - tw) * 0.5f;
-        float ty = tabRect.y + (tabHeight - 10.0f) * 0.5f;
+        float ty = tabRect.y + (tabHeight - (float)s_baseFontSize) * 0.5f;
         DrawTextBold(tabs[i], tx, ty, 10, isActive ? CLR_NAVY : CLR_TEXT);
     }
 
@@ -120,7 +173,7 @@ bool DrawButton(Rectangle rect, const char* caption, bool enabled, Color textCol
 
     int tw = MeasureTextBold(caption, 10);
     float tx = rect.x + (rect.width - tw) * 0.5f + (pressed ? 1.0f : 0.0f);
-    float ty = rect.y + (rect.height - 10.0f) * 0.5f + (pressed ? 1.0f : 0.0f);
+    float ty = rect.y + (rect.height - (float)s_baseFontSize) * 0.5f + (pressed ? 1.0f : 0.0f);
 
     DrawTextBold(caption, tx, ty, 10, enabled ? textColor : CLR_DISABLED);
     return clicked;
@@ -129,11 +182,11 @@ bool DrawButton(Rectangle rect, const char* caption, bool enabled, Color textCol
 bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step, const char* prefix) {
     bool changed = false;
 
-    float btnW = 15.0f;
+    float btnW = roundf(15.0f * s_scale);
     float editW = rect.width - btnW;
     Rectangle editRect = { rect.x, rect.y, editW, rect.height };
-    Rectangle upRect   = { rect.x + editW, rect.y, btnW, rect.height / 2.0f };
-    Rectangle downRect = { rect.x + editW, rect.y + rect.height / 2.0f, btnW, rect.height / 2.0f };
+    Rectangle upRect   = { rect.x + editW, rect.y, btnW, rect.height * 0.5f };
+    Rectangle downRect = { rect.x + editW, rect.y + rect.height * 0.5f, btnW, rect.height * 0.5f };
 
     DrawSunkenBox(editRect, CLR_YELLOW_BG);
 
@@ -141,7 +194,7 @@ bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step, co
     if (prefix) snprintf(valBuf, sizeof(valBuf), "%s%d", prefix, value);
     else snprintf(valBuf, sizeof(valBuf), "%d", value);
 
-    DrawTextBold(valBuf, editRect.x + 4.0f, editRect.y + (editRect.height - 10.0f) * 0.5f, 10, CLR_TEXT);
+    DrawTextBold(valBuf, editRect.x + 4.0f * s_scale, editRect.y + (editRect.height - (float)s_baseFontSize) * 0.5f, 10, CLR_TEXT);
 
     // Up button
     if (DrawButton(upRect, "^", true)) {
@@ -163,28 +216,28 @@ bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step, co
 }
 
 bool DrawUpDownRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step, const char* prefix) {
-    float upDownW = 58.0f;
-    float upDownH = 19.0f;
+    float upDownW = roundf(58.0f * s_scale);
+    float upDownH = roundf(19.0f * s_scale);
     float labelX = x;
     float upDownX = x + totalW - upDownW;
 
-    DrawTextBold(label, labelX, y + 4.0f, 10, CLR_NAVY);
+    DrawTextBold(label, labelX, y + 3.0f * s_scale, 10, CLR_NAVY);
     Rectangle rect = { upDownX, y, upDownW, upDownH };
     return DrawUpDown(rect, value, minVal, maxVal, step, prefix);
 }
 
 void DrawReadOnlyEdit(Rectangle rect, const char* text, Color bgColor, Color textColor) {
     DrawSunkenBox(rect, bgColor);
-    DrawTextBold(text, rect.x + 4.0f, rect.y + (rect.height - 10.0f) * 0.5f, 10, textColor);
+    DrawTextBold(text, rect.x + 4.0f * s_scale, rect.y + (rect.height - (float)s_baseFontSize) * 0.5f, 10, textColor);
 }
 
 void DrawReadOnlyEditRow(float x, float y, float totalW, const char* label, const char* text) {
-    float editW = 60.0f;
-    float editH = 19.0f;
+    float editW = roundf(60.0f * s_scale);
+    float editH = roundf(19.0f * s_scale);
     float labelX = x;
     float editX = x + totalW - editW;
 
-    DrawTextBold(label, labelX, y + 4.0f, 10, CLR_NAVY);
+    DrawTextBold(label, labelX, y + 3.0f * s_scale, 10, CLR_NAVY);
     Rectangle rect = { editX, y, editW, editH };
     DrawReadOnlyEdit(rect, text, CLR_EDIT_BG, CLR_TEXT);
 }

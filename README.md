@@ -144,9 +144,15 @@ The project includes a modern, high-performance port in `modern/` running at 60 
    * **Clicking any animal on the 500x400 map** instantly locks onto it with the target marker (`wybrany.bmp`) and opens its card in `My Rabbit` or `My Fox`!
    * Click **`<< Island`** at any time to return to island generation and re-sculpt the land.
 
-### 🖥️ Authentic Borland C++Builder Controls, Bold Typography & Status Bar:
-* **Retro Win95/Win2000 UI:** 3D sunken/raised borders, etched GroupBoxes, yellow TEdit fields, TUpDown numeric spinbox arrows (`^`/`v`), MultiLine tabs.
-* **Bold Pixel Typography:** Crisp, readable, bold retro font (`MS Sans Serif [fsBold]` aesthetic) with point-filtering to prevent modern texture blurring.
+### 🖥️ 1.7x Upscaled Screen (1280x748), Tahoma Bold Typography & Borland UI:
+* **1.7x High-DPI Upscale:** Default window expanded 1.7x to **1280x748** with an **850x680 island map** for expansive modern display clarity.
+* **Tahoma Bold TrueType Typography:** High-legibility **Tahoma Bold** (`tahomabd.ttf`) rendered with subpixel alpha blending for crystal-clear readability on all controls, textboxes, and labels.
+* **Authentic Win95/Win2000 Aesthetics:** 3D sunken/raised borders, etched GroupBoxes, yellow TEdit fields, TUpDown numeric spinbox arrows (`^`/`v`), MultiLine tabs.
+* **Full Island Colonization & Uncapped Ecology:**
+  * Fixed historical 2005 vector inversion in grass memory (`pamiec_trawy`) that previously repelled rabbits into map corners.
+  * Added wide-perimeter grass foraging (up to radius 20) and wandering inertia so rabbits explore and populate the entire island.
+  * Localized mate detection to natural sensory ranges (preventing whole-island gravitational clumping into one corner).
+  * Raised artificial 1990s population cap from 999 to 6,000 — population is now naturally regulated by grass carrying capacity and starvation.
 * **📊 Bottom Live Telemetry & Stats Bar:** Real-time metrics rendered in sunken Win95 status panels:
   * **Rabbits alive:** Instantaneous population count.
   * **Foxes alive:** Instantaneous predator count.

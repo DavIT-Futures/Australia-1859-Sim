@@ -128,6 +128,13 @@ void Kroliki::stat(int n) {
 }
 
 void Kroliki::dodaj(float x, float y, int zarcie, int kto) {
+    float bx = x + (float)(random(5) - 2);
+    float by = y + (float)(random(5) - 2);
+    if (bx >= 2 && bx < szer - 2 && by >= 2 && by < wys - 2 && pole[(int)bx][(int)by] >= 0) {
+        x = bx;
+        y = by;
+    }
+
     Ktab->push_back(Krolik());
     int idx = (int)Ktab->size() - 1;
     def_par(idx, (int)x, (int)y, zarcie);
@@ -180,21 +187,56 @@ void Kroliki::rusz(int n) {
             x = (float)t[pick][0];
             y = (float)t[pick][1];
 
-            if ((pole[(int)x][(int)y] == 0) && ((*Ktab)[n].pamiec_trawy[0] != -1)) {
-                float tx = (float)(*Ktab)[n].pamiec_trawy[0];
-                float ty = (float)(*Ktab)[n].pamiec_trawy[1];
+            // If local immediate cell has no grass, use memory or forage outward
+            if (pole[(int)x][(int)y] <= 0) {
+                if ((*Ktab)[n].pamiec_trawy[0] != -1) {
+                    float tx = (float)(*Ktab)[n].pamiec_trawy[0];
+                    float ty = (float)(*Ktab)[n].pamiec_trawy[1];
 
-                float dx = (*Ktab)[n].x - tx;
-                float dy = (*Ktab)[n].y - ty;
-                float dist = dx * dx + dy * dy;
+                    // Direction TOWARDS remembered grass
+                    float dx = tx - (*Ktab)[n].x;
+                    float dy = ty - (*Ktab)[n].y;
+                    float dist = dx * dx + dy * dy;
 
-                if (dist > 0) {
-                    dist = sqrtf(dist);
-                    dx = vk * dx / dist;
-                    dy = vk * dy / dist;
+                    if (dist > 0.0f) {
+                        dist = sqrtf(dist);
+                        dx = vk * dx / dist;
+                        dy = vk * dy / dist;
+                        x = (*Ktab)[n].x + dx;
+                        y = (*Ktab)[n].y + dy;
+                    }
+
+                    if (dist < 3.0f || (tx >= 0 && tx < szer && ty >= 0 && ty < wys && pole[(int)tx][(int)ty] <= 0)) {
+                        (*Ktab)[n].pamiec_trawy[0] = -1;
+                        (*Ktab)[n].pamiec_trawy[1] = -1;
+                    }
+                } else {
+                    // Outward perception: scan expanding rings (radius 4 to 20) for green grass
+                    bool found = false;
+                    for (int r = 4; r <= 20; r += 4) {
+                        for (int da = -r; da <= r; da += 4) {
+                            for (int db = -r; db <= r; db += 4) {
+                                int nx = (int)(*Ktab)[n].x + da;
+                                int ny = (int)(*Ktab)[n].y + db;
+                                if (nx >= 2 && nx < szer - 2 && ny >= 2 && ny < wys - 2) {
+                                    if (pole[nx][ny] > 1) {
+                                        (*Ktab)[n].pamiec_trawy[0] = nx;
+                                        (*Ktab)[n].pamiec_trawy[1] = ny;
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (found) break;
+                        }
+                        if (found) break;
+                    }
+                    if (!found) {
+                        // Gentle random wander across land to explore the island
+                        x = (*Ktab)[n].x + (float)(random(3) - 1);
+                        y = (*Ktab)[n].y + (float)(random(3) - 1);
+                    }
                 }
-                x = (*Ktab)[n].x + dx;
-                y = (*Ktab)[n].y + dy;
             }
         } else {
             if (pole[(int)x][(int)y] < (*Ktab)[n].kes + 1) {
@@ -224,14 +266,17 @@ void Kroliki::rusz(int n) {
     }
 
     if ((*Ktab)[n].status == 3) {
-        float min = 999999999.0f, dx, dy, odl;
+        const float MAX_MATE_DIST = 90.0f;
+        float min = MAX_MATE_DIST * MAX_MATE_DIST;
+        float dx = 0.0f, dy = 0.0f;
         int i = -1;
 
+        // Search for nearest mate within natural sensory radius
         for (size_t m = 0; m < Ktab->size(); m++) {
             if ((m != (size_t)n) && ((*Ktab)[m].status == 3) && ((*Ktab)[n].plec != (*Ktab)[m].plec) && ((*Ktab)[m].wiek > wiek_dojrz)) {
-                dx = (*Ktab)[n].x - (*Ktab)[m].x;
-                dy = (*Ktab)[n].y - (*Ktab)[m].y;
-                odl = dx * dx + dy * dy;
+                float cdx = (*Ktab)[n].x - (*Ktab)[m].x;
+                float cdy = (*Ktab)[n].y - (*Ktab)[m].y;
+                float odl = cdx * cdx + cdy * cdy;
                 if (odl < min) {
                     min = odl;
                     i = (int)m;
@@ -239,13 +284,12 @@ void Kroliki::rusz(int n) {
             }
         }
 
-        if (min > 0 && i >= 0) min = sqrtf(min);
-
         if (i >= 0) {
+            min = sqrtf(min);
             dx = (*Ktab)[n].x - (*Ktab)[i].x;
             dy = (*Ktab)[n].y - (*Ktab)[i].y;
-            if (min > 3) {
-                if (sqrtf(dx * dx + dy * dy) > vk) {
+            if (min > 3.0f) {
+                if (min > 0.0f) {
                     dx = vk * dx / min;
                     dy = vk * dy / min;
                 }
@@ -257,7 +301,7 @@ void Kroliki::rusz(int n) {
             x = (*Ktab)[n].x - dx;
             y = (*Ktab)[n].y - dy;
 
-            if ((min < 5) && (Ktab->size() < 999) && ((*Ktab)[n].ciaza < 0) && ((*Ktab)[n].plec == false)) {
+            if ((min < 5.0f) && (Ktab->size() < 6000) && ((*Ktab)[n].ciaza < 0) && ((*Ktab)[n].plec == false)) {
                 (*Ktab)[n].ciaza = dl_ciazy;
                 if ((*Ktab)[n].plod == nullptr) (*Ktab)[n].plod = new PlodK();
 
@@ -265,6 +309,12 @@ void Kroliki::rusz(int n) {
                 (*Ktab)[n].plod->glod = ((*Ktab)[n].glod + (*Ktab)[i].glod) / 2.0f;
                 (*Ktab)[n].plod->starving = ((*Ktab)[n].starving + (*Ktab)[i].starving) / 2.0f;
             }
+        } else {
+            // No mate in immediate range: wander gently and forage
+            dx = (float)(random(3) - 1);
+            dy = (float)(random(3) - 1);
+            x = (*Ktab)[n].x - dx;
+            y = (*Ktab)[n].y - dy;
         }
     }
 

@@ -105,6 +105,13 @@ void Lisy::rusz() {
 }
 
 void Lisy::dodaj(float x, float y, int zarcie, int kto) {
+    float bx = x + (float)(random(5) - 2);
+    float by = y + (float)(random(5) - 2);
+    if (bx >= 2 && bx < szer - 2 && by >= 2 && by < wys - 2 && pole[(int)bx][(int)by] >= 0) {
+        x = bx;
+        y = by;
+    }
+
     Ltab->push_back(Lis());
     int idx = (int)Ltab->size() - 1;
     def_par(idx, (int)x, (int)y, zarcie);
@@ -207,7 +214,7 @@ void Lisy::rusz(int n) {
             x = (*Ltab)[n].x - dx;
             y = (*Ltab)[n].y - dy;
 
-            if ((min < 10.0f) && (Ltab->size() < 999) && ((*Ltab)[n].ciaza < 0) && ((*Ltab)[n].plec == false)) {
+            if ((min < 10.0f) && (Ltab->size() < 6000) && ((*Ltab)[n].ciaza < 0) && ((*Ltab)[n].plec == false)) {
                 (*Ltab)[n].ciaza = dl_ciazy;
                 if ((*Ltab)[n].plod == nullptr) (*Ltab)[n].plod = new PlodL();
 
