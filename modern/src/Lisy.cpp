@@ -53,9 +53,9 @@ void Lisy::evolve(int n) {
 
 void Lisy::generuj(int l, int s, int r) {
     (void)s; (void)r;
-    czysc();
-    Ltab->resize(l);
-    for (int n = 0; n < l; n++) {
+    int startIdx = (int)Ltab->size();
+    Ltab->resize(startIdx + l);
+    for (int n = startIdx; n < startIdx + l; n++) {
         int x, y;
         int attempts = 0;
         do {

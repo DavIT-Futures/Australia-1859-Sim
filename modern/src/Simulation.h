@@ -45,39 +45,39 @@ public:
     int upDownSnieg = 50;
 
     // Parametry generatora królików:
-    int upDownIleK = 200;
+    int upDownIleK = 150;
     int upDownStadaK = 8;
     int upDownRozpK = 8;
 
-    // Parametry generatora lisów:
-    int upDownIleL = 20;
+    // Foxes generator parameters:
+    int upDownIleL = 5;
     int upDownStadaL = 8;
     int upDownRozpL = 8;
 
-    // Parametry Informera:
+    // Informer parameters:
     int wegetacja = 10;
 
-    // Króliki parametry:
-    int vkVal = 5;            // vk = 0.1 * vkVal = 0.5
+    // Rabbits parameters:
+    int vkVal = 6;            // vk = 0.1 * vkVal = 0.6
     int metaKVal = 4;
     int kesKVal = 64;
     int zoladekKVal = 100;
     int glodKVal = 60;
     int starvingKVal = 20;
-    int detekcjaKVal = 25;
-    int zycieKVal = 100;
+    int detekcjaKVal = 32;
+    int zycieKVal = 120;
     int dojrzaloscKVal = 21;
     int ciazaKVal = 20;
 
-    // Lisy parametry:
-    int vlVal = 10;           // vl = 0.1 * vlVal = 1.0
-    int metaLVal = 3;
-    int wodzLVal = 1500;
+    // Foxes parameters:
+    int vlVal = 7;            // vl = 0.1 * vlVal = 0.7 (calibrated: agile predator without instant wipeout)
+    int metaLVal = 4;
+    int wodzLVal = 1200;
     int zoladekLVal = 2000;
     int glodLVal = 1000;
-    int zycieLVal = 800;
-    int dojrzaloscLVal = 30;
-    int ciazaLVal = 30;
+    int zycieLVal = 600;
+    int dojrzaloscLVal = 35;
+    int ciazaLVal = 35;
 
     // Inspektor osobnika:
     int selectedKrolikIdx = 0;

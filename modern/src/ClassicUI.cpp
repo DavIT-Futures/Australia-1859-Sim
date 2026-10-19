@@ -5,6 +5,7 @@
 namespace ClassicUI {
 
 static Vector2 s_virtualMouse = { 0, 0 };
+static Font s_uiFont = { 0 };
 
 void SetVirtualMouse(Vector2 mouse) {
     s_virtualMouse = mouse;
@@ -12,6 +13,30 @@ void SetVirtualMouse(Vector2 mouse) {
 
 Vector2 GetVirtualMouse() {
     return s_virtualMouse;
+}
+
+void SetUIFont(Font font) {
+    s_uiFont = font;
+}
+
+Font GetUIFont() {
+    return s_uiFont;
+}
+
+static inline void DrawTextClassic(const char* text, float x, float y, float size, Color color) {
+    if (s_uiFont.texture.id != 0) {
+        DrawTextEx(s_uiFont, text, Vector2{ x, y }, size, 0.5f, color);
+    } else {
+        DrawText(text, (int)x, (int)y, (int)size, color);
+    }
+}
+
+static inline float MeasureTextClassic(const char* text, float size) {
+    if (s_uiFont.texture.id != 0) {
+        return MeasureTextEx(s_uiFont, text, size, 0.5f).x;
+    } else {
+        return (float)MeasureText(text, (int)size);
+    }
 }
 
 void DrawSunkenBox(Rectangle rect, Color bgColor) {
@@ -35,15 +60,15 @@ void DrawRaisedBox(Rectangle rect) {
 }
 
 void DrawGroupBox(Rectangle rect, const char* caption) {
-    int textWidth = MeasureText(caption, 10);
+    float textWidth = MeasureTextClassic(caption, 11.0f);
     int topY = (int)rect.y + 6;
 
     // Etched border (sunken rectangle)
     DrawLine((int)rect.x, topY, (int)rect.x + 8, topY, CLR_SHADOW);
     DrawLine((int)rect.x, topY + 1, (int)rect.x + 8, topY + 1, CLR_LIGHT);
 
-    DrawLine((int)rect.x + 12 + textWidth, topY, (int)(rect.x + rect.width - 1), topY, CLR_SHADOW);
-    DrawLine((int)rect.x + 12 + textWidth, topY + 1, (int)(rect.x + rect.width - 2), topY + 1, CLR_LIGHT);
+    DrawLine((int)(rect.x + 14 + textWidth), topY, (int)(rect.x + rect.width - 1), topY, CLR_SHADOW);
+    DrawLine((int)(rect.x + 14 + textWidth), topY + 1, (int)(rect.x + rect.width - 2), topY + 1, CLR_LIGHT);
 
     DrawLine((int)rect.x, topY, (int)rect.x, (int)(rect.y + rect.height - 1), CLR_SHADOW);
     DrawLine((int)rect.x + 1, topY + 1, (int)rect.x + 1, (int)(rect.y + rect.height - 2), CLR_LIGHT);
@@ -54,7 +79,7 @@ void DrawGroupBox(Rectangle rect, const char* caption) {
     DrawLine((int)(rect.x + rect.width - 2), topY, (int)(rect.x + rect.width - 2), (int)(rect.y + rect.height - 1), CLR_SHADOW);
     DrawLine((int)(rect.x + rect.width - 1), topY, (int)(rect.x + rect.width - 1), (int)(rect.y + rect.height), CLR_LIGHT);
 
-    DrawText(caption, (int)rect.x + 10, (int)rect.y, 10, CLR_TEXT);
+    DrawTextClassic(caption, rect.x + 10.0f, rect.y - 1.0f, 11.0f, CLR_TEXT);
 }
 
 int DrawTabs(Rectangle rect, const char* const* tabs, int count, int activeTab) {
@@ -80,10 +105,10 @@ int DrawTabs(Rectangle rect, const char* const* tabs, int count, int activeTab) 
             DrawLine((int)tabRect.x, (int)(tabRect.y + tabRect.height - 1), (int)(tabRect.x + tabRect.width), (int)(tabRect.y + tabRect.height - 1), CLR_LIGHT);
         }
 
-        int tw = MeasureText(tabs[i], 10);
-        int tx = (int)(tabRect.x + (tabWidth - tw) / 2.0f);
-        int ty = (int)(tabRect.y + (tabHeight - 10) / 2.0f);
-        DrawText(tabs[i], tx, ty, 10, isActive ? CLR_NAVY : CLR_TEXT);
+        float tw = MeasureTextClassic(tabs[i], 11.0f);
+        float tx = tabRect.x + (tabWidth - tw) * 0.5f;
+        float ty = tabRect.y + (tabHeight - 11.0f) * 0.5f;
+        DrawTextClassic(tabs[i], tx, ty, 11.0f, isActive ? CLR_NAVY : CLR_TEXT);
     }
 
     return activeTab;
@@ -109,11 +134,11 @@ bool DrawButton(Rectangle rect, const char* caption, bool enabled, Color textCol
         DrawRaisedBox(rect);
     }
 
-    int tw = MeasureText(caption, 10);
-    int tx = (int)(rect.x + (rect.width - tw) / 2.0f) + (pressed ? 1 : 0);
-    int ty = (int)(rect.y + (rect.height - 10) / 2.0f) + (pressed ? 1 : 0);
+    float tw = MeasureTextClassic(caption, 11.0f);
+    float tx = rect.x + (rect.width - tw) * 0.5f + (pressed ? 1.0f : 0.0f);
+    float ty = rect.y + (rect.height - 11.0f) * 0.5f + (pressed ? 1.0f : 0.0f);
 
-    DrawText(caption, tx, ty, 10, enabled ? textColor : CLR_DISABLED);
+    DrawTextClassic(caption, tx, ty, 11.0f, enabled ? textColor : CLR_DISABLED);
     return clicked;
 }
 
@@ -132,8 +157,7 @@ bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step, co
     if (prefix) snprintf(valBuf, sizeof(valBuf), "%s%d", prefix, value);
     else snprintf(valBuf, sizeof(valBuf), "%d", value);
 
-    int valTw = MeasureText(valBuf, 10);
-    DrawText(valBuf, (int)editRect.x + 3, (int)editRect.y + (int)(editRect.height - 10) / 2, 10, CLR_TEXT);
+    DrawTextClassic(valBuf, editRect.x + 4.0f, editRect.y + (editRect.height - 11.0f) * 0.5f, 11.0f, CLR_TEXT);
 
     // Up button
     if (DrawButton(upRect, "^", true)) {
@@ -155,36 +179,34 @@ bool DrawUpDown(Rectangle rect, int& value, int minVal, int maxVal, int step, co
 }
 
 bool DrawUpDownRow(float x, float y, float totalW, const char* label, int& value, int minVal, int maxVal, int step, const char* prefix) {
-    float upDownW = 56.0f;
+    float upDownW = 58.0f;
     float upDownH = 19.0f;
     float labelX = x;
-    float labelY = y + 4.0f;
     float upDownX = x + totalW - upDownW;
 
-    DrawText(label, (int)labelX, (int)labelY, 10, CLR_NAVY);
+    DrawTextClassic(label, labelX, y + 3.0f, 11.0f, CLR_NAVY);
     Rectangle rect = { upDownX, y, upDownW, upDownH };
     return DrawUpDown(rect, value, minVal, maxVal, step, prefix);
 }
 
 void DrawReadOnlyEdit(Rectangle rect, const char* text, Color bgColor, Color textColor) {
     DrawSunkenBox(rect, bgColor);
-    DrawText(text, (int)rect.x + 4, (int)rect.y + (int)(rect.height - 10) / 2, 10, textColor);
+    DrawTextClassic(text, rect.x + 4.0f, rect.y + (rect.height - 11.0f) * 0.5f, 11.0f, textColor);
 }
 
 void DrawReadOnlyEditRow(float x, float y, float totalW, const char* label, const char* text) {
-    float editW = 56.0f;
+    float editW = 60.0f;
     float editH = 19.0f;
     float labelX = x;
-    float labelY = y + 4.0f;
     float editX = x + totalW - editW;
 
-    DrawText(label, (int)labelX, (int)labelY, 10, CLR_NAVY);
+    DrawTextClassic(label, labelX, y + 3.0f, 11.0f, CLR_NAVY);
     Rectangle rect = { editX, y, editW, editH };
     DrawReadOnlyEdit(rect, text, CLR_EDIT_BG, CLR_TEXT);
 }
 
-void DrawLabel(float x, float y, const char* text, int fontSize, Color color) {
-    DrawText(text, (int)x, (int)y, fontSize, color);
+void DrawLabel(float x, float y, const char* text, float fontSize, Color color) {
+    DrawTextClassic(text, x, y, fontSize, color);
 }
 
 } // namespace ClassicUI

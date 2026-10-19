@@ -44,6 +44,23 @@ int main() {
     RenderTexture2D target = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
     SetTextureFilter(target.texture, TEXTURE_FILTER_POINT);
 
+    // Load clean, crisp TrueType font for all UI text (Segoe UI / Tahoma)
+    Font uiFont = { 0 };
+    if (FileExists("assets/segoeui.ttf")) {
+        uiFont = LoadFontEx("assets/segoeui.ttf", 26, 0, 0);
+    } else if (FileExists("segoeui.ttf")) {
+        uiFont = LoadFontEx("segoeui.ttf", 26, 0, 0);
+    } else if (FileExists("C:\\Windows\\Fonts\\segoeui.ttf")) {
+        uiFont = LoadFontEx("C:\\Windows\\Fonts\\segoeui.ttf", 26, 0, 0);
+    } else if (FileExists("C:\\Windows\\Fonts\\tahoma.ttf")) {
+        uiFont = LoadFontEx("C:\\Windows\\Fonts\\tahoma.ttf", 26, 0, 0);
+    }
+
+    if (uiFont.texture.id != 0) {
+        SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR);
+        ClassicUI::SetUIFont(uiFont);
+    }
+
     Simulation sim;
 
     // RGBA buffer for procedural 500x400 island map
@@ -550,6 +567,7 @@ int main() {
     if (texKrolik.id != 0)  UnloadTexture(texKrolik);
     if (texLis.id != 0)     UnloadTexture(texLis);
     if (texWybrany.id != 0) UnloadTexture(texWybrany);
+    if (uiFont.texture.id != 0) UnloadFont(uiFont);
     UnloadRenderTexture(target);
 
     CloseWindow();
