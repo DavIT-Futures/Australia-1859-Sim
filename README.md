@@ -1,64 +1,87 @@
-# 🏝️ Wyspa (Island) — Symulacja Ekosystemu Drapieżnik-Ofiara
+# 🏝️ Island (Wyspa) — Ecosystem & Predator-Prey Life Simulator
 
 [![C++](https://img.shields.io/badge/Language-C%2B%2B-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B)
 [![Borland C++Builder 6](https://img.shields.io/badge/IDE-Borland%20C%2B%2BBuilder%206-red.svg)](https://en.wikipedia.org/wiki/C%2B%2BBuilder)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20(Win32)-lightgrey.svg)](https://microsoft.com/windows)
 [![Author](https://img.shields.io/badge/Author-Dawid%20Domaga%C5%82a%20(DavIT--Futures)-orange.svg)](https://github.com/DavIT-Futures)
 
+[**English Overview**](#-english-overview) | [**Polska Dokumentacja**](#-polska-dokumentacja)
+
+---
+
+## 🌍 English Overview
+
+### 🌿 What is This Simulation?
+**Island** (*Wyspa*) is an artificial life (ALife) ecosystem simulator and cellular automata environment originally built in **January 2005** by Dawid Domagała for the Object-Oriented Programming course at Wrocław University of Science and Technology (*Politechnika Wrocławska*, Faculty of Electronics).
+
+The project simulates a self-sustaining, emergent ecosystem on an isolated island:
+1. **Procedural Island Synthesis:** The user first crafts the island geography. The land is encircled by sparkling blue ocean water with animated wave patterns, soft golden sandy beaches along the coast, expansive green grass meadows inland, rocky mountain ridges, snow-capped peaks, and impassable volcanic zones.
+2. **Dynamic Grass Vegetation:** Green grass sprouts and regrows across the island terrain over time based on configurable vegetation velocity parameters.
+3. **Prey (Rabbits):** Herbivorous rabbits roam the grassy plains. Every step consumes metabolic energy (measured in Joules). When hungry, rabbits search for grass to graze on. As they feed and age, they reach sexual maturity, undergo gestation, and give birth to offspring.
+4. **Predators (Foxes):** Carnivorous foxes are introduced to the island. Foxes hunt rabbits for food, manage their own metabolic burn, form packs, and reproduce when well-fed.
+5. **The Closed Ecological Cycle:** *Grass grows &rarr; Rabbits graze on grass &rarr; Foxes hunt rabbits &rarr; Overhunting causes foxes to starve &rarr; Vegetation recovers &rarr; The cycle continues endlessly in a dynamic Lotka-Volterra equilibrium.*
+
+---
+
+### 🇦🇺 The Historical Connection: The Australian Rabbit Crisis of 1859
+This simulation closely mirrors one of the most famous ecological events in history: **the Australian rabbit plague**.
+
+> In October 1859, 24 European wild rabbits were released in Victoria, Australia by Thomas Austin for recreational hunting. With virtually no native natural predators and a vast continent of lush flora, the rabbit population exploded exponentially into hundreds of millions. They devastated farmland, triggered catastrophic soil erosion, and decimated indigenous vegetation.
+> 
+> To curb the invasion, **red foxes** were introduced to Australia in 1871. However, instead of simply containing the rabbits, foxes established their own predatory pressure and severely threatened native wildlife—creating a classic real-world demonstration of **predator-prey-vegetation dynamics, invasive species pressure, and ecological carrying capacity**, exactly as modeled in this simulator.
+
+---
+
+### 🎮 Key Gameplay & Simulation Mechanics
+* **Island Generator:**
+  * Procedural contour synthesis combining geometric bounding boxes with 4 sinusoidal wave functions of customizable amplitude and random noise.
+  * Diamond-algorithm coastal bay generator for carving natural fjords and coves into the coastline.
+  * Cellular automata smoothing filters (alternating morphological dilation and erosion using cross-shaped masks).
+  * Color gradient terrain zones with noise grain: *Salt Water &rarr; Sand Beach &rarr; Grassland &rarr; Snow &rarr; Mountains & Volcano*.
+* **Animal Behavioral AI & Genetics:**
+  * Real-time priority hierarchy (eating, fleeing predators, mating).
+  * Individual metabolism (Joules per action), hunger threshold, gestation duration, eyesight radius, and lifespan.
+  * Behavioral customization and easter eggs (including *"Neo the Commando Rabbit"*).
+* **Live Statistics Dashboard:**
+  * Real-time counters of active rabbit and fox populations.
+  * Detailed mortality analytics: deaths from old age, starvation, or predation.
+* **Plug & Play Retro Binary:**
+  * Fully standalone Win32 executable (`ver16/wyspa.exe`) statically linked with Borland VCL.
+  * Runs natively on **Windows 10 & Windows 11 64-bit** with zero installation or external DLL dependencies.
+
+---
+
+## 📸 Screenshots & Gallery
+
+| Island Ecosystem View | Island Shape Generator |
+|:---:|:---:|
+| ![Island Simulation View](docs/screenshots/7.png) | ![Island Shape Generator](docs/screenshots/1.png) |
+
+| Coastal Bays & Coves Generator | Live Population Statistics |
+|:---:|:---:|
+| ![Bays Generator](docs/screenshots/2.png) | ![Population Stats](docs/screenshots/7g.png) |
+
+---
+
+## 🇵🇱 Polska Dokumentacja
+
+### 🌟 Opis Projektu
 Projekt symulacji ekosystemu wyspy (drapieżnik–ofiara) zrealizowany w **styczniu 2005 roku** w ramach kursu **Projekt z Programowania Obiektowego** na **Wydziale Elektroniki Politechniki Wrocławskiej**.
 
 Aplikacja modeluje interakcje w zamkniętym ekosystemie wyspy pomiędzy **roślinożercami (króliki)**, **drapieżnikami (lisy)** a **zasobami środowiskowymi (wegetacja trawy)** na dynamicznie generowanym, konfigurowalnym terenie.
 
----
-
-## 📸 Galeria i Zrzuty Ekranu
-
-| Widok Symulacji Wyspy | Panel Sterowania i Parametry Ekosystemu |
-|:---:|:---:|
-| ![Wyspa Główna](docs/screenshots/7.png) | ![Panel Generowania](docs/screenshots/1.png) |
-
-| Generator Zatok i Wybrzeża | Panel Statystyk Populacji |
-|:---:|:---:|
-| ![Generator Zatok](docs/screenshots/2.png) | ![Statystyki](docs/screenshots/7g.png) |
-
----
-
-## 🌟 Główne Funkcjonalności
-
-### 1. Proceduralny Generator Wyspy
-* **Kształtowanie konturu:** Generowanie lądu na bazie obwiedni geometrycznej, na którą nakładane są 4 fale sinusoidalne o regulowanej amplitudzie oraz szum losowy.
-* **Generator zatok:** Algorytm rombowy z kontrolowaną nieregularnością i wielkością zatok (możliwość generowania zatok głębokich lub drobnych zatoczek plażowych).
-* **Filtry morfologiczne i wygładzanie:** Wygładzanie brzegów oparte o automaty komórkowe z maską krzyżową (naprzemienne operacje dylatacji i erozji lądu i wody).
-* **Gradientowe strefy klimatyczno-terenowe:**
-  - Woda słona (strefa nieprzekraczalna dla zwierząt)
-  - Plaża
-  - Pas trawiasty (obszar wegetacji)
-  - Śnieg
-  - Góry i wulkan (bariery terenowe)
-* **Ziarnistość terenu:** Płynne przejścia kolorystyczne (gradient) z losowym szumem zaburzającym granice stref.
-
-### 2. Symulacja Życia i Ekologii (Króliki & Lisy)
-* **Króliki (Ofiary):**
-  - Metabolizm: spalanie energii (w dżulach) podczas każdego ruchu,
-  - Głód i poszukiwanie pożywienia: zjadanie kęp trawy i uzupełnianie zapasów energetycznych,
-  - Zmysły: dynamiczny zasięg widzenia lisów i ucieczka przed drapieżnikiem,
-  - Rozmnażanie: wiek dojrzałości płciowej, okres ciąży, narodziny potomstwa,
-  - Śmiertelność: śmierć ze starości, z głodu lub w wyniku upolowania przez lisa.
-* **Lisy (Drapieżniki):**
-  - Polowanie: wykrywanie królików, pościg, zjadanie ofiar,
-  - Zapotrzebowanie energetyczne: większe tempo metabolizmu wymagające stałych łowów,
-  - Rozród i watahy: tworzenie stad i rozprzestrzenianie populacji drapieżników.
-* **Wegetacja Trawy:**
-  - Dynamiczny wzrost trawy zależny od współczynnika wegetacji,
-  - Odnawianie się wyjedzonych kęp po określonym czasie,
-  - Możliwość globalnego zresetowania lub przyspieszenia wegetacji.
-* **Inżynieria Genetyczna i Priorytety Behawioralne:**
-  - Zaawansowany panel edycji indywidualnych parametrów osobników,
-  - Hierarchia potrzeb (jedzenie, ucieczka, rozród),
-  - Tryby specjalne ("Neo jako królik-komandos").
-* **Panel Statystyk:**
-  - Bieżący licznik populacji lisów i królików,
-  - Analiza przyczyn zgonów (z głodu, ze starości, upolowane).
+### Główne Funkcjonalności
+* **Generator wyspy:**
+  * Rysowanie konturu wyspy oparte o 4 sinusojdy i szum losowy,
+  * Generator nieregularnych zatok (od małych zatoczek po głębokie fiordy),
+  * Wygładzanie brzegów oparte o automaty komórkowe z maską krzyżową (naprzemienne operacje dylatacji i erozji lądu i wody),
+  * Strefy gradientowe: morze, plaża, trawa, śnieg, góry, wulkan.
+* **Symulacja Życia i Ekologii:**
+  * **Króliki (Ofiary):** spalanie dżuli przy ruchu, głód, poszukiwanie trawy, ucieczka przed lisem, dojrzałość, ciąża, śmierć głodowa/ze starości/ze zjedzenia.
+  * **Lisy (Drapieżniki):** polowanie na króliki, pościg, zapotrzebowanie energetyczne, watahy i rozród.
+  * **Wegetacja Trawy:** dynamiczny wzrost trawy, odnawianie się wyjedzonych kęp.
+  * **Inżynieria Genetyczna:** panel edycji cech osobniczych i priorytetów zachowań ("Neo jako królik-komandos").
+  * **Statystyki:** liczniki populacji i przyczyn zgonów na żywo.
 
 ---
 
@@ -95,7 +118,7 @@ Wyspa/
 
 ---
 
-## 🚀 Uruchomienie Programu
+## 🚀 Uruchomienie Programu / Running the Application
 
 Skompilowana aplikacja znajduje się w folderze `ver16/wyspa.exe`.
 
@@ -106,7 +129,7 @@ Skompilowana aplikacja znajduje się w folderze `ver16/wyspa.exe`.
 
 ---
 
-## 🛠️ Kompilacja ze Źródeł
+## 🛠️ Kompilacja ze Źródeł / Building from Source
 
 Kod źródłowy został napisany z wykorzystaniem biblioteki **VCL** dedykowanej dla środowiska **Borland C++Builder 6.0**:
 
@@ -116,7 +139,7 @@ Kod źródłowy został napisany z wykorzystaniem biblioteki **VCL** dedykowanej
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Autor / Author
 
 * **Dawid Domagała** ([@DavIT-Futures](https://github.com/DavIT-Futures))
 * Politechnika Wrocławska, Wydział Elektroniki (2005)
