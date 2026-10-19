@@ -1,0 +1,3 @@
+random do zycia
+wyzerowac parametry zgonu
+zapisz/wczytaj

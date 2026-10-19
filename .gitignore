@@ -1,0 +1,54 @@
+# ==============================================================================
+# .gitignore for Borland C++Builder / C++ VCL Projects
+# ==============================================================================
+
+# Borland intermediate build artifacts
+*.obj
+*.o
+*.tds
+*.map
+*.csm
+*.ilc
+*.ild
+*.ilf
+*.ils
+*.pch
+*.rsm
+*.identcache
+*.stat
+
+# Borland editor autosave and backup files
+*.~*
+*.#??
+*.bak
+
+# Borland desktop and local state files
+*.dsk
+
+# Scratch test projects
+Project1.*
+Unit1.*
+
+# Archive files
+*.rar
+*.zip
+*.7z
+*.tar
+*.gz
+
+# Operating system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDE and editor settings
+.vs/
+.vscode/
+*.user
+
+# Executables: ignore build outputs by default, but preserve standalone release binary
+*.exe
+!wyspa.exe
+!bin/*.exe
