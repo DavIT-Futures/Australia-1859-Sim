@@ -59,20 +59,20 @@ public:
 
     // Rabbits parameters:
     int vkVal = 6;            // vk = 0.1 * vkVal = 0.6
-    int metaKVal = 4;
+    int metaKVal = 2;         // Calibrated: 2 allows rabbit to survive fleeing without instant starvation
     int kesKVal = 64;
-    int zoladekKVal = 100;
-    int glodKVal = 60;
-    int starvingKVal = 20;
-    int detekcjaKVal = 32;
+    int zoladekKVal = 150;
+    int glodKVal = 90;
+    int starvingKVal = 30;
+    int detekcjaKVal = 24;    // Fear radius: 24px (flee when predator gets close)
     int zycieKVal = 120;
     int dojrzaloscKVal = 21;
     int ciazaKVal = 20;
 
     // Foxes parameters:
-    int vlVal = 7;            // vl = 0.1 * vlVal = 0.7 (calibrated: agile predator without instant wipeout)
-    int metaLVal = 4;
-    int wodzLVal = 1200;
+    int vlVal = 7;            // vl = 0.1 * vlVal = 0.7
+    int metaLVal = 3;
+    int wodzLVal = 1800;      // Satiation from caught rabbit keeps fox well-fed without wiping whole herds
     int zoladekLVal = 2000;
     int glodLVal = 1000;
     int zycieLVal = 600;

@@ -128,12 +128,16 @@ void Kroliki::stat(int n) {
     if (((*Ktab)[n].zoladek < (*Ktab)[n].glod) || ((*Ktab)[n].ciaza >= 0)) (*Ktab)[n].status = 2;
 
     if (!Ltab->empty()) {
-        float minOdl = (float)(pole_widz * pole_widz);
+        float pw = (float)pole_widz;
+        float minOdl = pw * pw;
         int nearestFox = -1;
 
         for (size_t m = 0; m < Ltab->size(); m++) {
             float dx = (*Ktab)[n].x - (*Ltab)[m].x;
+            if (fabsf(dx) >= pw) continue;
             float dy = (*Ktab)[n].y - (*Ltab)[m].y;
+            if (fabsf(dy) >= pw) continue;
+
             float odl = dx * dx + dy * dy;
             if (odl < minOdl) {
                 minOdl = odl;
@@ -296,26 +300,41 @@ void Kroliki::rusz(int n) {
             x = (*Ktab)[n].x + dx;
             y = (*Ktab)[n].y + dy;
         }
+
+        // Opportunistic nibble while fleeing if passing over grass (prevents sudden mass starvation during predator presence)
+        int ix = (int)x, iy = (int)y;
+        if (ix >= 0 && ix < szer && iy >= 0 && iy < wys && pole[ix][iy] > 0 && (*Ktab)[n].zoladek < (*Ktab)[n].glod) {
+            float bite = (*Ktab)[n].kes * 0.5f;
+            if (pole[ix][iy] < (int)bite + 1) {
+                (*Ktab)[n].zoladek += pole[ix][iy];
+                pole[ix][iy] = 0;
+            } else {
+                (*Ktab)[n].zoladek += bite;
+                pole[ix][iy] -= (int)bite;
+            }
+        }
     }
 
     if ((*Ktab)[n].status == 3) {
-        const float MAX_MATE_DIST = 90.0f;
+        const float MAX_MATE_DIST = 50.0f;
         float min = MAX_MATE_DIST * MAX_MATE_DIST;
         float dx = 0.0f, dy = 0.0f;
         int i = -1;
 
-        // Search only adjacent spatial grid cells (O(1) localized search)
+        // Search adjacent 3x3 spatial grid cells (O(1) highly localized search)
         int gx = (int)(*Ktab)[n].x / CELL_SIZE;
         int gy = (int)(*Ktab)[n].y / CELL_SIZE;
-        int minGx = std::max(0, gx - 3);
-        int maxGx = std::min(GRID_COLS - 1, gx + 3);
-        int minGy = std::max(0, gy - 3);
-        int maxGy = std::min(GRID_ROWS - 1, gy + 3);
+        int minGx = std::max(0, gx - 1);
+        int maxGx = std::min(GRID_COLS - 1, gx + 1);
+        int minGy = std::max(0, gy - 1);
+        int maxGy = std::min(GRID_ROWS - 1, gy + 1);
 
         for (int cy = minGy; cy <= maxGy; cy++) {
             for (int cx = minGx; cx <= maxGx; cx++) {
                 const auto& cell = s_rabbitGrid[cy][cx];
+                int candidateChecks = 0;
                 for (int m : cell) {
+                    if (++candidateChecks > 12) break; // Cap search per cell: prevents O(N^2) lag when population is high
                     if (m != n && (*Ktab)[m].status == 3 && ((*Ktab)[n].plec != (*Ktab)[m].plec) && ((*Ktab)[m].wiek > wiek_dojrz)) {
                         float cdx = (*Ktab)[n].x - (*Ktab)[m].x;
                         float cdy = (*Ktab)[n].y - (*Ktab)[m].y;

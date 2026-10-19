@@ -226,6 +226,7 @@ void Simulation::lad() {
     }
 
     delete Kol;
+    resetTrawy();
 }
 
 void Simulation::fale() {
