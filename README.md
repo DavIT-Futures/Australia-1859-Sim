@@ -45,9 +45,9 @@ This simulation closely mirrors one of the most famous ecological events in hist
 * **Live Statistics Dashboard:**
   * Real-time counters of active rabbit and fox populations.
   * Detailed mortality analytics: deaths from old age, starvation, or predation.
-* **Plug & Play Retro Binary:**
-  * Fully standalone Win32 executable (`ver16/wyspa.exe`) statically linked with Borland VCL.
-  * Runs natively on **Windows 10 & Windows 11 64-bit** with zero installation or external DLL dependencies.
+* **Plug & Play Retro Binaries (Dedicated Branches):**
+  * The historical Borland VCL Win32 executables (`wyspa.exe`) from 2005 are preserved in dedicated Git branches: [`ver16`](https://github.com/DavIT-Futures/Australia-1859-Sim/tree/ver16), [`ver15`](https://github.com/DavIT-Futures/Australia-1859-Sim/tree/ver15), and [`ver14`](https://github.com/DavIT-Futures/Australia-1859-Sim/tree/ver14).
+  * Run natively on **Windows 10 & Windows 11 64-bit** with zero installation or external DLL dependencies.
 
 ---
 
@@ -96,19 +96,10 @@ Australia-1859-Sim/
 │   │   ├── Simulation.cpp # Generator wyspy, BFS fal, wegetacja, renderer RGBA
 │   │   ├── Kroliki.cpp    # Klasa królików, stado, metabolizm, rozród, ucieczka
 │   │   ├── Lisy.cpp       # Klasa lisów, polowanie, stado, zachowanie
-│   │   └── *.h            # Klasy bazowe, kolejka FIFO BFS
-│   ├── assets/            # Oryginalne ikony i sprite'y zwierząt
+│   │   ├── ClassicUI.cpp  # Retro interfejs Win95/Borland (kontrolki, edytowalne pola, zakładki)
+│   │   └── *.h            # Klasy bazowe, deklaracje i nagłówki
+│   ├── assets/            # Oryginalne ikony, sprite'y zwierząt i czcionka Tahoma
 │   └── bin/               # Gotowy, skompilowany plik Australia1859Sim.exe (x64)
-├── ver16/                 # Ostateczna archiwalna wersja projektu (Borland C++Builder 6)
-│   ├── wyspa.bpr          # Plik projektu Borland C++Builder 6
-│   ├── wyspa.cpp          # Punkt wejścia WinMain
-│   ├── glowny.cpp / .h    # Główne okno aplikacji VCL
-│   ├── glowny.dfm         # Definicja formularza VCL
-│   ├── Kroliki.cpp / .h   # Oryginalne algorytmy królików
-│   ├── Lisy.cpp / .h      # Oryginalne algorytmy lisów
-│   └── wyspa.exe          # Oryginalny plik wykonywalny Win32 z 2005 roku
-├── ver15/                 # Wersja pośrednia (etap rozwoju projektu)
-├── ver14/                 # Wczesna wersja prototypowa
 ├── docs/                  # Dokumentacja i materiały archiwalne
 │   ├── wyspa.doc          # Oryginalna dokumentacja projektowa PWr (2005)
 │   └── screenshots/       # Zrzuty ekranu w formacie PNG
@@ -116,6 +107,8 @@ Australia-1859-Sim/
 ├── .gitignore             # Wykluczenie plików tymczasowych Borland i CMake
 └── README.md              # Niniejsza dokumentacja
 ```
+
+> **Wersje archiwalne z 2005 roku:** Wersje `ver14`, `ver15` oraz `ver16` (Borland C++Builder 6) są zachowane w osobnych gałęziach Git (`git checkout ver14`, `ver15`, `ver16`). Więcej szczegółów w sekcji [Wersje Klasyczne](#-wersje-klasyczne-2005-archiwalne-gałęzie-git).
 
 ---
 
@@ -186,12 +179,21 @@ CMake automatycznie pobierze i skompiluje bibliotekę Raylib – nie trzeba nic 
 
 ---
 
-## 🏛️ Wersja Klasyczna (Borland C++Builder 6 / 2005)
+## 🏛️ Wersje Klasyczne 2005 (Archiwalne Gałęzie Git)
 
-Oryginalna, archiwalna aplikacja znajduje się w folderze `ver16/wyspa.exe`:
-* Jest to 32-bitowy plik wykonywalny Win32 ze statycznie zlinkowaną biblioteką VCL.
-* Działa natywnie na współczesnych systemach Windows (Windows 10, Windows 11 64-bit) pod warstwą WOW64.
-* Do rekompilacji źródeł z folderu `ver16/` wymagane jest środowisko **Borland C++Builder 6.0** (lub Embarcadero C++Builder z obsługą VCL).
+Oryginalne, archiwalne wersje ze środowiska **Borland C++Builder 6** zostały wyodrębnione do dedykowanych gałęzi Git z plikami umieszczonymi bezpośrednio w katalogu głównym:
+
+* **[`ver16`](https://github.com/DavIT-Futures/Australia-1859-Sim/tree/ver16)** – Ostateczna wersja projektu z 2005 roku (`wyspa.exe`, pełny kod źródłowy i formularze VCL).
+* **[`ver15`](https://github.com/DavIT-Futures/Australia-1859-Sim/tree/ver15)** – Wersja pośrednia z implementacją płodów i watah.
+* **[`ver14`](https://github.com/DavIT-Futures/Australia-1859-Sim/tree/ver14)** – Wczesna wersja prototypowa.
+
+Aby pobrać i uruchomić wybraną wersję archiwalną:
+```bash
+git checkout ver16   # Przełączenie na gałąź z wersją 1.6
+git checkout ver15   # Przełączenie na gałąź z wersją 1.5
+git checkout ver14   # Przełączenie na gałąź z wersją 1.4
+```
+Plik wykonywalny `wyspa.exe` z tych gałęzi działa natywnie na współczesnych systemach Windows (Windows 10, Windows 11 64-bit) pod warstwą WOW64. Do rekompilacji źródeł z gałęzi archiwalnych wymagane jest środowisko **Borland C++Builder 6.0** (lub Embarcadero C++Builder z obsługą VCL).
 
 ---
 
