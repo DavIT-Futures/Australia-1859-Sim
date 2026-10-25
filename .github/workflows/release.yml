@@ -1,0 +1,91 @@
+name: Multi-Platform Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x64
+            archive_ext: zip
+          - os: ubuntu-latest
+            platform: linux-x64
+            archive_ext: tar.gz
+          - os: macos-latest
+            platform: macos-arm64
+            archive_ext: tar.gz
+          - os: macos-13
+            platform: macos-x64
+            archive_ext: tar.gz
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libwayland-dev \
+            libxkbcommon-dev
+
+      - name: Configure CMake
+        run: cmake -B build -S modern -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Prepare Package Directory (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path ./package -Force
+          Copy-Item ./build/Release/Australia1859Sim.exe ./package/
+          Copy-Item ./modern/assets ./package/assets -Recurse
+          $tag = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { "v2.0.0" }
+          $filename = "Australia-1859-Sim-$tag-${{ matrix.platform }}.zip"
+          Compress-Archive -Path ./package/* -DestinationPath ./$filename -Force
+
+      - name: Prepare Package Directory (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p ./package
+          # Executable location differs on single-config vs multi-config generators
+          if [ -f "./build/Australia1859Sim" ]; then
+            cp ./build/Australia1859Sim ./package/
+          elif [ -f "./build/Release/Australia1859Sim" ]; then
+            cp ./build/Release/Australia1859Sim ./package/
+          fi
+          cp -r ./modern/assets ./package/assets
+          TAG="${GITHUB_REF_NAME:-v2.0.0}"
+          FILENAME="Australia-1859-Sim-${TAG}-${{ matrix.platform }}.tar.gz"
+          tar -czvf "./$FILENAME" -C ./package .
+
+      - name: Upload Binaries to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Australia-1859-Sim-*

@@ -1,8 +1,10 @@
 # 🇦🇺 Australia 1859 Sim (Wyspa) — Predator-Prey Island Ecosystem Life Simulator
 
-[![C++](https://img.shields.io/badge/Language-C%2B%2B-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B)
-[![Borland C++Builder 6](https://img.shields.io/badge/IDE-Borland%20C%2B%2BBuilder%206-red.svg)](https://en.wikipedia.org/wiki/C%2B%2BBuilder)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20(Win32)-lightgrey.svg)](https://microsoft.com/windows)
+[![Release](https://img.shields.io/github/v/release/DavIT-Futures/Australia-1859-Sim?color=brightgreen&label=Release)](https://github.com/DavIT-Futures/Australia-1859-Sim/releases/latest)
+[![Build & Release](https://github.com/DavIT-Futures/Australia-1859-Sim/actions/workflows/release.yml/badge.svg)](https://github.com/DavIT-Futures/Australia-1859-Sim/actions/workflows/release.yml)
+[![C++](https://img.shields.io/badge/Language-C%2B%2B20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B)
+[![Raylib](https://img.shields.io/badge/Graphics-Raylib%205.5-orange.svg)](https://www.raylib.com/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/DavIT-Futures/Australia-1859-Sim/releases)
 [![Author](https://img.shields.io/badge/Author-Dawid%20Domaga%C5%82a%20(DavIT--Futures)-orange.svg)](https://github.com/DavIT-Futures)
 
 [**English Overview**](#-english-overview) | [**Polska Dokumentacja**](#-polska-dokumentacja)

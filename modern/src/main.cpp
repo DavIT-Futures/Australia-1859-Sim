@@ -41,7 +41,7 @@ int main() {
     const int startWindowH = 748;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
-    InitWindow(startWindowW, startWindowH, "Australia 1859 Sim - Island Ecosystem Simulator (Dawid Domagala)");
+    InitWindow(startWindowW, startWindowH, "Australia 1859 Sim v2.0 - Island Ecosystem Simulator (Dawid Domagala)");
     SetWindowMinSize(960, 560);
     SetTargetFPS(60);
 
@@ -275,7 +275,7 @@ int main() {
         // PHASE 1: Island Generator
         // -------------------------------------------------------------------------
         if (sim.poziom == 0) {
-            DrawGroupBox(groupBoxRect, "Island Generator ver. 1.4");
+            DrawGroupBox(groupBoxRect, "Island Generator v2.0");
 
             const char* godTabs[] = { "Shape", "Bays", "Adjust", "Terrain" };
             Rectangle tabRect = { panelX + 8.0f, panelY + 20.0f, panelW - 16.0f, 28.0f };
@@ -347,7 +347,7 @@ int main() {
         // PHASE 2: Ecosystem Simulation & Object Management
         // -------------------------------------------------------------------------
         else if (sim.poziom == 1) {
-            DrawGroupBox(groupBoxRect, "Ecosystem Manager ver. 1.4");
+            DrawGroupBox(groupBoxRect, "Ecosystem Manager v2.0");
             float rowW = panelW - 24.0f;
             float startX = panelX + 12.0f;
 
