@@ -158,10 +158,15 @@ The project includes a modern, high-performance port in `modern/` running at 60 
   * 1-click speed presets: **`0.5x`** (slow-motion observation), **`1x`** (normal), **`2x`**, **`5x`**, **`10x`** (fast-forward evolution).
 * **🖥️ Fullscreen (F11):** Toggle between windowed and fullscreen with the button or **`F11`** hotkey. Uses letterboxed virtual resolution so graphics and mouse coordinates remain pixel-perfect on any screen resolution.
 
+### 🌐 Cross-Platform by Design (Windows, Linux, macOS):
+Thanks to the lightweight and robust **[Raylib](https://www.raylib.com/)** architecture, the modern simulator is 100% cross-platform. It builds natively and runs seamlessly with identical 60 FPS performance and hardware-accelerated OpenGL on **Windows (x64)**, **Linux (x64)**, and **macOS (Apple Silicon & Intel)**.
+
 ### 🎮 How to Run (Prebuilt Executable):
-A standalone, fully statically linked 64-bit Windows executable is ready in:  
-👉 **`modern/bin/Australia1859Sim.exe`**  
-Just double-click to run on Windows 10 & 11 with zero dependencies!
+- **Windows (x64):** A standalone, fully statically linked 64-bit Windows executable is ready in:  
+  👉 **`modern/bin/Australia1859Sim.exe`**  
+  Just double-click to run on Windows 10 & 11 with zero dependencies!
+- **Linux & macOS:** Standalone portable binaries are packaged with every release:  
+  👉 [Download pre-built packages for Windows, Linux, or macOS from Releases](https://github.com/DavIT-Futures/Australia-1859-Sim/releases/latest)
 
 ### ⌨️ Controls & Hotkeys:
 * **`[F11]`** / **Panel Button** – Fullscreen toggle (Letterbox 4:3 / 16:9)
@@ -171,13 +176,33 @@ Just double-click to run on Windows 10 & 11 with zero dependencies!
 * **`Mouse Click on Island Map`** – Select and lock onto the closest rabbit or fox (`My Rabbit` / `My Fox`)
 * **`Clicking Tabs and UpDown Spinners`** – Adjust parameters, spawn animals, and manage genetics in real time!
 
-### 🛠️ Kompilacja portu ze źródeł (Visual Studio 2026 / CMake):
-```bash
-cd modern
-cmake -B build
-cmake --build build --config Release
-```
-CMake automatycznie pobierze i skompiluje bibliotekę Raylib – nie trzeba nic instalować ręcznie!
+### 🛠️ Cross-Platform Build from Source (Windows, Linux, macOS):
+**Prerequisites:** CMake 3.20+ and a standard C++20 compiler (MSVC, GCC 11+, or Clang 13+). Raylib is fetched and built automatically via CMake `FetchContent`—no manual library installations required!
+
+* **Windows (Visual Studio / MSVC):**
+  ```bash
+  cd modern
+  cmake -B build
+  cmake --build build --config Release
+  ```
+
+* **Linux (Ubuntu / Debian / Fedora / Arch):**
+  ```bash
+  # Install standard X11 / OpenGL development packages:
+  sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+  cd modern
+  cmake -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build --parallel
+  ./build/Australia1859Sim
+  ```
+
+* **macOS (Apple Silicon M1–M4 & Intel):**
+  ```bash
+  cd modern
+  cmake -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build --parallel
+  ./build/Australia1859Sim
+  ```
 
 ---
 
