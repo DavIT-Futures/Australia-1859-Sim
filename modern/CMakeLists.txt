@@ -27,6 +27,20 @@ add_executable(Australia1859Sim
 target_include_directories(Australia1859Sim PRIVATE src)
 target_link_libraries(Australia1859Sim PRIVATE raylib)
 
+# Flagi kompilatora i optymalizacje
+if(MSVC)
+    target_compile_options(Australia1859Sim PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(Australia1859Sim PRIVATE -Wall -Wextra)
+endif()
+
+# Włącz Link-Time Optimization (IPO/LTO) dla wydań Release, jeśli wspierane
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+    set_property(TARGET Australia1859Sim PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
+
 # Kopiuj sprite'y do folderu wynikowego po kompilacji
 add_custom_command(TARGET Australia1859Sim POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
