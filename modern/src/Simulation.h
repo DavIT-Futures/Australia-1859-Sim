@@ -127,7 +127,18 @@ public:
         int greenCells = 0;
     };
 
-    IslandStats getIslandStats() const;
+    /// <summary>
+    /// Checks if the given coordinate is within valid island grid boundaries.
+    /// </summary>
+    [[nodiscard]] static constexpr bool isInBounds(int x, int y) noexcept {
+        return x >= 0 && x < SZER && y >= 0 && y < WYS;
+    }
+
+    [[nodiscard]] IslandStats getIslandStats() const;
+    [[nodiscard]] bool isRunning() const noexcept { return running; }
+    [[nodiscard]] int getSimSpeed() const noexcept { return simSpeed; }
+    [[nodiscard]] size_t getRabbitCount() const noexcept { return Ktab.size(); }
+    [[nodiscard]] size_t getFoxCount() const noexcept { return Ltab.size(); }
 
     void fale();
     void lad();
