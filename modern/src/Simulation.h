@@ -116,7 +116,14 @@ public:
     void butOkClick();
     void butPowrotClick();
 
+    /// <summary>
+    /// Advances ecosystem simulation by one tick across cellular automata and predator-prey agents.
+    /// </summary>
     void update();
+    /// <summary>
+    /// Renders the current simulation grid into an RGBA pixel buffer for visualization.
+    /// </summary>
+    /// <param name="rgbaBuffer">Destination buffer of size (SZER * WYS * 4) bytes.</param>
     void renderToRGBA(uint8_t* rgbaBuffer);
 
     struct IslandStats {
@@ -139,6 +146,16 @@ public:
     [[nodiscard]] int getSimSpeed() const noexcept { return simSpeed; }
     [[nodiscard]] size_t getRabbitCount() const noexcept { return Ktab.size(); }
     [[nodiscard]] size_t getFoxCount() const noexcept { return Ltab.size(); }
+
+    /// <summary>
+    /// Sets the simulation execution speed multiplier.
+    /// </summary>
+    void setSimSpeed(int speed) noexcept { if (speed > 0) simSpeed = speed; }
+
+    /// <summary>
+    /// Sets the running state of the ecosystem tick loop.
+    /// </summary>
+    void setRunning(bool state) noexcept { running = state; }
 
     void fale();
     void lad();
