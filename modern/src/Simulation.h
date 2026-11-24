@@ -95,16 +95,31 @@ public:
     Simulation();
     ~Simulation();
 
+    /// <summary>
+    /// Generates initial island landmass geometry based on the specified amplitude parameter.
+    /// </summary>
     void generujWyspe(int amp);
     void dodajZatoki(int l_zatok, int w_zatok, int r_zatok);
     void dodajZatokiPlaza(int l_zatok, int w_zatok, int r_zatok);
+    /// <summary>
+    /// Applies cellular automata smoothing filter iterations across the terrain grid.
+    /// </summary>
     void wygladz(int gladz);
     void zwiekszLad();
     void zmniejszLad();
     void dodajZiarno(int z);
+    /// <summary>
+    /// Finalizes terrain generation and transitions simulation into agent execution phase.
+    /// </summary>
     void zatwierdzWyspe();
 
+    /// <summary>
+    /// Spawns the specified population of rabbit herbivore agents across valid land tiles.
+    /// </summary>
     void generujKroliki(int ile = 200);
+    /// <summary>
+    /// Spawns the specified population of fox predator agents across valid land tiles.
+    /// </summary>
     void generujLisy(int ile = 20);
     void resetTrawy();
     void maxTrawa();
