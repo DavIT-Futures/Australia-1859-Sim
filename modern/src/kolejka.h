@@ -13,15 +13,17 @@ private:
 
     TEl* head;
     TEl* tail;
+    std::size_t count;
 
 public:
-    FIFO() : head(nullptr), tail(nullptr) {}
+    FIFO() : head(nullptr), tail(nullptr), count(0) {}
+
+    // Non-copyable to prevent shallow-copy double-free of linked-list nodes.
+    FIFO(const FIFO&) = delete;
+    FIFO& operator=(const FIFO&) = delete;
 
     ~FIFO() {
-        int x, y, c;
-        while (!empty()) {
-            pop(x, y, c);
-        }
+        clear();
     }
 
     void push(int nx, int ny, int nc) {
@@ -37,6 +39,7 @@ public:
             tail->nast = el;
             tail = el;
         }
+        ++count;
     }
 
     void pop(int& nx, int& ny, int& nc) {
@@ -48,7 +51,21 @@ public:
             head = head->nast;
             if (head == nullptr) tail = nullptr;
             delete tmp;
+            --count;
         }
+    }
+
+    /// Removes and deallocates all queued elements.
+    void clear() {
+        int x, y, c;
+        while (!empty()) {
+            pop(x, y, c);
+        }
+    }
+
+    /// Returns the number of elements currently stored in the queue.
+    std::size_t size() const {
+        return count;
     }
 
     bool empty() const {
