@@ -47,3 +47,14 @@ add_custom_command(TARGET Australia1859Sim POST_BUILD
     "${CMAKE_CURRENT_SOURCE_DIR}/assets"
     "$<TARGET_FILE_DIR:Australia1859Sim>/assets"
 )
+
+enable_testing()
+add_executable(Australia1859SimTests
+    tests/fifo_tests.cpp
+)
+target_include_directories(Australia1859SimTests PRIVATE src)
+add_test(NAME FifoQueueOrderTest COMMAND Australia1859SimTests)
+add_custom_command(TARGET Australia1859SimTests POST_BUILD
+    COMMAND $<TARGET_FILE:Australia1859SimTests>
+    COMMENT "Running Australia1859Sim unit tests"
+)
