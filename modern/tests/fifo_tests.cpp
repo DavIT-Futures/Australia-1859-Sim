@@ -28,8 +28,40 @@ int test_fifo_preserves_insertion_order_and_size() {
     return 0;
 }
 
+int test_fifo_clear_empties_queue_and_allows_reuse() {
+    FIFO queue;
+    queue.push(1, 2, 3);
+    queue.push(4, 5, 6);
+    queue.clear();
+
+    if (!queue.empty() || queue.size() != 0) {
+        return 10;
+    }
+
+    int x = 99, y = 98, c = 97;
+    queue.pop(x, y, c);
+    if (x != 99 || y != 98 || c != 97 || !queue.empty() || queue.size() != 0) {
+        return 11;
+    }
+
+    queue.push(7, 8, 9);
+    if (queue.empty() || queue.size() != 1) {
+        return 12;
+    }
+
+    queue.pop(x, y, c);
+    if (x != 7 || y != 8 || c != 9 || !queue.empty() || queue.size() != 0) {
+        return 13;
+    }
+
+    return 0;
+}
+
 } // namespace
 
 int main() {
-    return test_fifo_preserves_insertion_order_and_size();
+    if (int rc = test_fifo_preserves_insertion_order_and_size(); rc != 0) {
+        return rc;
+    }
+    return test_fifo_clear_empties_queue_and_allows_reuse();
 }
